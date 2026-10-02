@@ -320,6 +320,17 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):
             await self.m.async_regenerate(trip["number"], {})
 
+    async def test_none_button_on_meals_and_km(self):
+        await self.go((7, 0), (18, 30))
+        await self.answer("name", "A")
+        await self.answer("purpose", "B")
+        self.assertEqual(self.m.data["pending"] and self.last_notify()["data"]["actions"][-1]["title"], "Keine")
+        pid = next(iter(self.m.data["pending"]))
+        await self.m._on_action(Event({"action": f"RK_{pid}|km|none"}))
+        self.assertEqual(self.last_notify()["data"]["actions"][-1]["action"], f"RK_{pid}|meals|none")
+        await self.m._on_action(Event({"action": f"RK_{pid}|meals|none"}))
+        self.assertEqual(len(self.m.data["trips"]), 1)
+
     async def test_dashboard_correction_fields(self):
         await self.go((7, 0), (18, 30))
         await self.finish("100")

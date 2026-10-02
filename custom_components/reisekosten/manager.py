@@ -335,11 +335,11 @@ class ReisekostenManager:
         if step == "purpose":
             return "Reisekosten: Zweck", "Zweck der Reise? (z. B. Präsenzunterricht)", True
         if step == "km":
-            return "Reisekosten: Kilometer", "Gefahrene Kilometer mit dem Pkw (gesamt)? - für keine", True
+            return "Reisekosten: Kilometer", "Gefahrene Kilometer mit dem Pkw (gesamt)? Bei keinen: „Keine“ tippen.", True
         if step == "overnight":
             return "Reisekosten: Übernachtung", "Gab es eine Übernachtung auswärts?", False
         return ("Reisekosten: Mahlzeiten",
-                "Gestellte Mahlzeiten? Beispiel: 08.01 FA, 09.01 M (F=Frühstück, M=Mittag, A=Abend). - für keine",
+                "Gestellte Mahlzeiten? Beispiel: 08.01 FA, 09.01 M (F=Frühstück, M=Mittag, A=Abend). Wurden keine gestellt: „Keine“ tippen.",
                 True)
 
     async def _ask(self, p: Pending, step: str, error: str | None = None) -> None:
@@ -356,6 +356,8 @@ class ReisekostenManager:
                                 "title": f"Übernehmen: {suggestion}"[:40]})
             if step == "name":
                 actions.append({"action": f"{ACTION_PREFIX}{p.id}|{step}|discard", "title": "Keine Dienstreise"})
+            elif step in ("km", "meals"):
+                actions.append({"action": f"{ACTION_PREFIX}{p.id}|{step}|none", "title": "Keine"})
         else:
             actions = [{"action": f"{ACTION_PREFIX}{p.id}|{step}|yes", "title": "Ja"},
                        {"action": f"{ACTION_PREFIX}{p.id}|{step}|no", "title": "Nein"}]
@@ -388,7 +390,9 @@ class ReisekostenManager:
         if value == "discard":
             await self.async_discard(pid)
             return
-        if value == "accept":
+        if value == "none":
+            text = "-"
+        elif value == "accept":
             text = (self.data.get("suggest") or {}).get(pid, {}).get(step, "")
         else:
             text = event.data.get("reply_text", "") if value == "reply" else value

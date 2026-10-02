@@ -35,7 +35,7 @@ class SampleFromOnexma(unittest.TestCase):
     def test_lines_like_onexma(self):
         l = self.st.lines
         self.assertEqual(len(l), 3)
-        self.assertEqual(l[0].text, "Verpflegungspausch. 07.01.2026 Anreisetag (16:04 Std.)")
+        self.assertEqual(l[0].text, "Verpflegungspausch. 07.01.2026 Anreisetag (16:05 Std.)")
         self.assertEqual(l[0].sub, "Abreise: 07:55")
         self.assertEqual(l[0].net, D("14"))
         self.assertEqual(l[1].text, "Verpflegungspausch. 9 Tage ab 08.01.2026 x 28 EUR")

@@ -2,6 +2,12 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.8.3]
+### Neu
+- **Knopf „Keine“** bei der Frage nach gestellten Mahlzeiten (und nach Kilometern, falls aktiviert) – kein „-“ mehr eintippen.
+### Behoben
+- Beim Anreisetag steht jetzt die volle Zeit bis Mitternacht („18:00 Std.“ statt „17:59 Std.“). Die Beträge ändern sich nicht.
+
 ## [0.8.2]
 ### Verbessert
 - **Mehrere Kalendertermine pro Reise:** Überschneiden sich mehrere Termine mit der Abwesenheit (z. B. vier Termine an zwei Orten in zwei Wochen), werden sie nach Beginn sortiert zusammengefasst. Bei Adressen mit Postleitzahl wird nur der Ort übernommen, doppelte Einträge erscheinen nur einmal. Beispiel: Ziel „Sinsheim, Fellbach“, Zweck „Inhouse Reha-Med Sinsheim; VPT KGG Fellbach; TRENA Fellbach“.

@@ -169,7 +169,7 @@ def per_diem(trip: Trip, rules: Rules) -> list[DayAmount]:
 
     elif trip.overnight:
         tz = s.tzinfo
-        arrival_shown = datetime.combine(d0, time(23, 59), tz) - s
+        arrival_shown = datetime.combine(d0 + timedelta(days=1), time(0, 0), tz) - s
         departure_shown = e - datetime.combine(d1, time(0, 0), tz)
         raw.append(DayAmount(d0, "arrival", arrival_shown, rules.arrival_departure))
         day = d0 + timedelta(days=1)
