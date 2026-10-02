@@ -38,7 +38,8 @@
           "city": "Postcode and city",
           "calendars": "Calendars for event suggestions (optional, multiple)",
           "output_dir": "Folder for the PDFs (pick one or type your own path)",
-          "upload_onedrive": "Also upload to OneDrive (app folder of the HA OneDrive integration, subfolder “Reisekosten”)"
+          "upload_onedrive": "Also upload to OneDrive (app folder of the HA OneDrive integration, subfolder “Reisekosten”)",
+          "calendar_required": "Only ask if a calendar event matches the trip (needs calendars)"
         }
       },
       "rules": {
@@ -128,6 +129,60 @@
           "description": ""
         }
       }
+    },
+    "discard": {
+      "name": "Discard open trip",
+      "description": "Discards an open trip (not a business trip).",
+      "fields": {
+        "trip_id": {
+          "name": "Trip ID",
+          "description": "Trip start as YYYYMMDDHHMM."
+        }
+      }
+    },
+    "delete_trip": {
+      "name": "Delete statement",
+      "description": "Deletes the statement, PDF and OneDrive copy; the number is freed if it was the last one.",
+      "fields": {
+        "number": {
+          "name": "Number",
+          "description": "For example 2026003."
+        }
+      }
+    },
+    "regenerate": {
+      "name": "Regenerate statement",
+      "description": "Re-creates the PDF with the same number, optionally with corrected data.",
+      "fields": {
+        "number": {
+          "name": "Number",
+          "description": "For example 2026003."
+        },
+        "name": {
+          "name": "Trip",
+          "description": ""
+        },
+        "purpose": {
+          "name": "Purpose",
+          "description": ""
+        },
+        "overnight": {
+          "name": "Overnight",
+          "description": ""
+        },
+        "km_car": {
+          "name": "Car km",
+          "description": ""
+        },
+        "meals": {
+          "name": "Meals",
+          "description": "For example 08.01 FA, 09.01 M."
+        }
+      }
+    },
+    "list_trips": {
+      "name": "List statements",
+      "description": "Returns all statements with number, period and amount."
     }
   }
 }

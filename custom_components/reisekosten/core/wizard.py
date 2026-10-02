@@ -25,6 +25,7 @@ class Pending:
     overnight: bool | None = None
     meals: dict[date, set[str]] | None = None
     note: str = ""
+    away_minutes: int | None = None      # Summe mehrerer Abwesenheiten am selben Tag
 
     def to_dict(self) -> dict:
         return {
@@ -34,7 +35,7 @@ class Pending:
             "overnight": self.overnight,
             "meals": None if self.meals is None else
             {d.isoformat(): sorted(v) for d, v in self.meals.items()},
-            "note": self.note,
+            "note": self.note, "away_minutes": self.away_minutes,
         }
 
     @classmethod
@@ -49,7 +50,7 @@ class Pending:
             overnight=data.get("overnight"),
             meals=None if meals is None else
             {date.fromisoformat(k): set(v) for k, v in meals.items()},
-            note=data.get("note", ""),
+            note=data.get("note", ""), away_minutes=data.get("away_minutes"),
         )
 
 
@@ -59,12 +60,16 @@ def crosses_midnight(p: Pending) -> bool:
 
 def to_trip(p: Pending) -> Trip:
     km = {"car": p.km_car} if p.km_car and p.km_car > 0 else {}
-    return Trip(p.start, p.end, overnight=bool(p.overnight), meals=p.meals or {}, km=km)
+    away = timedelta(minutes=p.away_minutes) if p.away_minutes is not None and not crosses_midnight(p) else None
+    return Trip(p.start, p.end, overnight=bool(p.overnight), meals=p.meals or {}, km=km, away=away)
 
 
 def qualifies(start: datetime, end: datetime, rules: Rules) -> bool:
     """Gibt es für diese Abwesenheit überhaupt eine Verpflegungspauschale?"""
-    span = end - start
+    return qualifies_span(end - start, rules)
+
+
+def qualifies_span(span: timedelta, rules: Rules) -> bool:
     if span <= timedelta(0):
         return False
     limit = timedelta(hours=float(rules.min_hours))

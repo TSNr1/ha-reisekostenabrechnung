@@ -9,6 +9,7 @@ CONF_NAME = "person_name"
 CONF_STREET = "street"
 CONF_CITY = "city"
 CONF_CALENDARS = "calendars"
+OPT_CALENDAR_REQUIRED = "calendar_required"   # nur bei passendem Kalendertermin nachfragen
 
 # Optionen
 OPT_RULES = "rules"

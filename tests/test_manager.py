@@ -65,7 +65,7 @@ def _install_stub():
     mod("homeassistant.util", dt=dt_mod)
     mod("homeassistant.config_entries", ConfigEntry=object)
     mod("homeassistant.core", Event=Event, EventStateChangedData=dict, HomeAssistant=object,
-        State=State, ServiceCall=object, callback=lambda f: f)
+        State=State, ServiceCall=object, SupportsResponse=types.SimpleNamespace(ONLY='only'), callback=lambda f: f)
     mod("homeassistant.helpers")
     mod("homeassistant.helpers.event", async_call_later=async_call_later,
         async_track_state_change_event=async_track_state_change_event)
@@ -235,6 +235,90 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         self.person("home", utc(2, 18, 30))
         await TIMERS[0][1](None)
         self.assertIn("Wohin ging die Reise", self.last_notify()["message"])
+
+    async def go(self, a, b, d=2):
+        self.person("not_home", utc(d, *a))
+        self.person("home", utc(d, *b))
+        await TIMERS[-1][1](None)
+        TIMERS.clear()
+
+    async def finish(self, km="-"):
+        for step, text in (("name", "A"), ("purpose", "B"), ("km", km), ("meals", "-")):
+            await self.answer(step, text)
+
+    def notes(self):
+        return [c for c in self.hass.calls if c[0] == "notify"]
+
+    async def test_discard_button(self):
+        await self.go((7, 0), (18, 30))
+        note = self.last_notify()
+        pid = next(iter(self.m.data["pending"]))
+        self.assertEqual(note["data"]["actions"][-1]["action"], f"RK_{pid}|name|discard")
+        await self.m._on_action(Event({"action": f"RK_{pid}|name|discard"}))
+        self.assertEqual(self.m.data["pending"], {})
+        self.assertIn("verworfen", self.last_notify()["message"])
+        self.assertEqual(self.m.data["trips"], [])
+
+    async def test_calendar_required_skips_trips_without_event(self):
+        self.m.entry = types.SimpleNamespace(
+            data=Entry.data, options={"calendars": ["calendar.work"], "calendar_required": True})
+        await self.go((7, 0), (18, 30))
+        self.assertEqual(self.notes(), [])
+        self.assertEqual(self.m.data["pending"], {})
+        self.hass.calendar_response = {"calendar.work": {"events": [
+            {"start": "2026-03-03T08:00:00+01:00", "end": "2026-03-03T16:00:00+01:00", "summary": "Kunde"}]}}
+        await self.go((7, 0), (18, 30), d=3)
+        self.assertIn("Wohin ging die Reise", self.last_notify()["message"])
+
+    async def test_two_absences_on_one_day_are_added_up(self):
+        await self.go((7, 0), (11, 0))                    # 4 Std. allein: keine Pauschale
+        self.assertEqual(self.notes(), [])
+        await self.go((14, 0), (19, 0))                   # zusammen 9 Std.
+        self.assertIn("zusammengerechnet: 9.0 Std.", self.last_notify()["message"])
+        pid = next(iter(self.m.data["pending"]))
+        self.assertTrue(pid.endswith("0700"))
+        await self.finish()
+        trip = self.m.data["trips"][0]
+        self.assertEqual(float(trip["total"]), 14.0)
+        await self.go((20, 0), (21, 30))                  # später am Tag: schon abgerechnet
+        self.assertEqual(len(self.m.data["trips"]), 1)
+        self.assertEqual(self.m.data["pending"], {})
+
+    async def test_second_absence_extends_open_trip(self):
+        await self.go((7, 0), (16, 30))                   # 9,5 Std., Fragen offen
+        pid = next(iter(self.m.data["pending"]))
+        await self.go((18, 0), (19, 0))
+        self.assertEqual(list(self.m.data["pending"]), [pid])
+        self.assertEqual(self.m.data["pending"][pid]["away_minutes"], 10 * 60 + 30)
+
+    async def test_delete_trip_frees_number_and_file(self):
+        await self.go((7, 0), (18, 30))
+        await self.finish("10")
+        first = self.m.data["trips"][0]
+        await self.go((7, 0), (18, 30), d=3)
+        await self.finish("10")
+        self.assertEqual(self.m.data["counter"], 2)
+        await self.m.async_delete_trip(first["number"])               # mittendrin: Zähler bleibt
+        self.assertEqual(self.m.data["counter"], 2)
+        self.assertFalse(Path(first["path"]).exists())
+        await self.m.async_delete_trip(self.m.data["trips"][0]["number"])
+        self.assertEqual((self.m.data["counter"], self.m.data["trips"]), (0, []))
+        with self.assertRaises(ValueError):
+            await self.m.async_delete_trip("2026999")
+
+    async def test_regenerate_with_corrections(self):
+        await self.go((7, 0), (18, 30))
+        await self.finish("100")
+        trip = self.m.data["trips"][0]
+        self.assertEqual(float(trip["total"]), 44.0)
+        await self.m.async_regenerate(trip["number"], {"km_car": 0, "purpose": "Neu"})
+        trip = self.m.data["trips"][0]
+        self.assertEqual((float(trip["total"]), trip["purpose"], len(self.m.data["trips"])), (14.0, "Neu", 1))
+        self.assertTrue(Path(trip["path"]).exists())
+        self.assertIn("Neu erzeugt", self.last_notify()["title"])
+        trip.pop("data")
+        with self.assertRaises(ValueError):
+            await self.m.async_regenerate(trip["number"], {})
 
     async def test_short_trip_is_ignored(self):
         self.person("not_home", utc(2, 8, 0))

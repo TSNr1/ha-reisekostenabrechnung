@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
@@ -18,6 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_ADD_TRIP = "add_trip"
 SERVICE_ANSWER = "answer"
+SERVICE_DISCARD = "discard"
+SERVICE_DELETE = "delete_trip"
+SERVICE_REGENERATE = "regenerate"
+SERVICE_LIST = "list_trips"
+ALL_SERVICES = (SERVICE_ADD_TRIP, SERVICE_ANSWER, SERVICE_DISCARD, SERVICE_DELETE,
+                SERVICE_REGENERATE, SERVICE_LIST)
 
 ADD_TRIP_SCHEMA = vol.Schema({
     vol.Required("start"): cv.datetime,
@@ -33,6 +39,17 @@ ANSWER_SCHEMA = vol.Schema({
     vol.Required("trip_id"): cv.string,
     vol.Required("step"): vol.In(["name", "purpose", "km", "overnight", "meals"]),
     vol.Required("text"): cv.string,
+})
+
+DISCARD_SCHEMA = vol.Schema({vol.Required("trip_id"): cv.string})
+DELETE_SCHEMA = vol.Schema({vol.Required("number"): cv.string})
+REGENERATE_SCHEMA = vol.Schema({
+    vol.Required("number"): cv.string,
+    vol.Optional("name"): cv.string,
+    vol.Optional("purpose"): cv.string,
+    vol.Optional("overnight"): cv.boolean,
+    vol.Optional("km_car"): vol.Coerce(float),
+    vol.Optional("meals"): cv.string,
 })
 
 
@@ -60,8 +77,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def answer(call: ServiceCall) -> None:
         await manager.async_answer(call.data["trip_id"], call.data["step"], call.data["text"])
 
+    async def discard(call: ServiceCall) -> None:
+        await manager.async_discard(call.data["trip_id"])
+
+    async def delete_trip(call: ServiceCall) -> None:
+        await manager.async_delete_trip(call.data["number"])
+
+    async def regenerate(call: ServiceCall) -> None:
+        await manager.async_regenerate(call.data["number"], {k: v for k, v in call.data.items() if k != "number"})
+
+    async def list_trips(call: ServiceCall) -> dict:
+        return {"trips": manager.list_trips()}
+
     hass.services.async_register(DOMAIN, SERVICE_ADD_TRIP, add_trip, schema=ADD_TRIP_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_ANSWER, answer, schema=ANSWER_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_DISCARD, discard, schema=DISCARD_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_DELETE, delete_trip, schema=DELETE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_REGENERATE, regenerate, schema=REGENERATE_SCHEMA)
+    hass.services.async_register(DOMAIN, SERVICE_LIST, list_trips, supports_response=SupportsResponse.ONLY)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     return True
 
@@ -74,6 +107,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager: ReisekostenManager = hass.data[DOMAIN].pop(entry.entry_id)
     manager.async_stop()
     if not hass.data[DOMAIN]:
-        hass.services.async_remove(DOMAIN, SERVICE_ADD_TRIP)
-        hass.services.async_remove(DOMAIN, SERVICE_ANSWER)
+        for service in ALL_SERVICES:
+            hass.services.async_remove(DOMAIN, service)
     return True

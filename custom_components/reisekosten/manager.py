@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -17,13 +17,15 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ACC_CONTRA, ACC_KM, ACC_PAYMENT, ACC_PER_DIEM, ACTION_PREFIX, ARRIVAL_DEBOUNCE_SECONDS,
     CONF_CALENDARS, CONF_CITY, CONF_COMPANY, CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE,
-    DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE, ONEDRIVE_FOLDER, OUTPUT_SUBDIR, OUTPUT_URL, STORAGE_KEY,
+    DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_CALENDAR_REQUIRED, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE, ONEDRIVE_FOLDER, OUTPUT_SUBDIR, OUTPUT_URL, STORAGE_KEY,
     STORAGE_VERSION,
 )
 from .core.calendar_match import pick_event
 from .core.engine import Accounts, Meta, build_statement, fmt_money
 from .core.rules import rules_for
-from .core.wizard import Pending, apply_answer, next_step, qualifies, to_trip
+from .core.wizard import (
+    Pending, apply_answer, next_step, parse_km, parse_meals, qualifies, qualifies_span, to_trip,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +65,9 @@ class ReisekostenManager:
             street=c.get(CONF_STREET, ""), city=c.get(CONF_CITY, ""),
             trip_name=p.name or "", purpose=p.purpose or "", number=number, user=user,
             status="erstellt",
-            note=f"{user}, {dt_util.now():%d.%m.%Y %H:%M}: Abrechnung automatisch erstellt",
+            note=f"{user}, {dt_util.now():%d.%m.%Y %H:%M}: Abrechnung automatisch erstellt"
+            + (f"; mehrere Abwesenheiten am {p.start:%d.%m.%Y} zusammengerechnet "
+               f"({p.away_minutes // 60}:{p.away_minutes % 60:02d} Std.)" if p.away_minutes else ""),
             accounts=Accounts(
                 per_diem=acc.get(ACC_PER_DIEM, "4664"), km=acc.get(ACC_KM, ""),
                 contra=acc.get(ACC_CONTRA, ""), payment=acc.get(ACC_PAYMENT, "Bar")),
@@ -150,13 +154,53 @@ class ReisekostenManager:
             start = dt_util.as_local(dt_util.parse_datetime(raw))
             end = dt_util.as_local(arrival)
             self.data["away_since"] = None
-            if not qualifies(start, end, self.rules(end.year)):
-                _LOGGER.debug("Abwesenheit %s - %s zu kurz, keine Abrechnung", start, end)
+            rules = self.rules(end.year)
+            if start.date() == end.date():
+                p = await self._merge_same_day(start, end, rules)
+            else:
+                p = Pending(id=start.strftime("%Y%m%d%H%M"), start=start, end=end) \
+                    if qualifies(start, end, rules) else None
+            if p is None:
                 await self._save()
                 return
-            p = Pending(id=start.strftime("%Y%m%d%H%M"), start=start, end=end)
             await self._remember_suggestion(p)
+            if (self.cfg.get(CONF_CALENDARS) and self.cfg.get(OPT_CALENDAR_REQUIRED)
+                    and p.id not in (self.data.get("suggest") or {})):
+                _LOGGER.debug("Kein passender Kalendertermin für %s - %s, keine Rückfrage", p.start, p.end)
+                await self._save()
+                return
             await self._advance(p)
+
+    async def _merge_same_day(self, start: datetime, end: datetime, rules) -> Pending | None:
+        """Mehrere Abwesenheiten am selben Kalendertag werden zusammengerechnet."""
+        days: dict[str, list] = self.data.setdefault("days", {})
+        today = dt_util.now().date()
+        for key in [k for k in days if (today - datetime.fromisoformat(k).date()).days > 3]:
+            del days[key]
+        key = start.date().isoformat()
+        segments = days.setdefault(key, [])
+        segments.append([start.isoformat(), end.isoformat()])
+        parsed = [(datetime.fromisoformat(a), datetime.fromisoformat(b)) for a, b in segments]
+        total = sum((b - a for a, b in parsed), timedelta(0))
+
+        def same_day(s: str, e: str) -> bool:
+            return s[:10] == key and e[:10] == key
+
+        if any(same_day(t["start"], t["end"]) for t in self.data["trips"]):
+            _LOGGER.debug("Am %s gibt es schon eine Abrechnung, weitere Abwesenheit bringt nichts", key)
+            return None
+        for raw in self.data["pending"].values():
+            if same_day(raw["start"], raw["end"]):             # offene Reise desselben Tages erweitern
+                p0 = Pending.from_dict(raw)
+                p0.end = max(p0.end, end)
+                p0.away_minutes = int(total.total_seconds() // 60)
+                await self._advance(p0)
+                return None
+        if not qualifies_span(total, rules):
+            return None
+        first = min(a for a, _ in parsed)
+        return Pending(id=first.strftime("%Y%m%d%H%M"), start=first, end=end,
+                       away_minutes=int(total.total_seconds() // 60) if len(parsed) > 1 else None)
 
     # ------------------------------------------------------------------ Rückfragen
     async def _advance(self, p: Pending) -> None:
@@ -170,8 +214,10 @@ class ReisekostenManager:
             await self._ask(p, step)
 
     def _question(self, p: Pending, step: str) -> tuple[str, str, bool]:
-        hours = (p.end - p.start).total_seconds() / 3600
+        hours = (p.away_minutes * 60 if p.away_minutes else (p.end - p.start).total_seconds()) / 3600
         header = f"Unterwegs {p.start:%d.%m. %H:%M} - {p.end:%d.%m. %H:%M} ({hours:.1f} Std.)"
+        if p.away_minutes:
+            header = f"Mehrere Abwesenheiten am {p.start:%d.%m.} zusammengerechnet: {hours:.1f} Std."
         if step == "name":
             return "Reisekosten: Reise", f"{header}\nWohin ging die Reise? (z. B. Kunde Musterstadt)", True
         if step == "purpose":
@@ -196,6 +242,8 @@ class ReisekostenManager:
                 message += f"\nVorschlag aus dem Kalender: {suggestion}"
                 actions.append({"action": f"{ACTION_PREFIX}{p.id}|{step}|accept",
                                 "title": f"Übernehmen: {suggestion}"[:40]})
+            if step == "name":
+                actions.append({"action": f"{ACTION_PREFIX}{p.id}|{step}|discard", "title": "Keine Dienstreise"})
         else:
             actions = [{"action": f"{ACTION_PREFIX}{p.id}|{step}|yes", "title": "Ja"},
                        {"action": f"{ACTION_PREFIX}{p.id}|{step}|no", "title": "Nein"}]
@@ -225,6 +273,9 @@ class ReisekostenManager:
             pid, step, value = action[len(ACTION_PREFIX):].split("|", 2)
         except ValueError:
             return
+        if value == "discard":
+            await self.async_discard(pid)
+            return
         if value == "accept":
             text = (self.data.get("suggest") or {}).get(pid, {}).get(step, "")
         else:
@@ -248,6 +299,20 @@ class ReisekostenManager:
                 return False
             await self._advance(p)
             return True
+
+    async def async_discard(self, pid: str) -> bool:
+        """Offene Reise verwerfen („keine Dienstreise“)."""
+        async with self._lock:
+            raw = self.data["pending"].pop(pid, None)
+            if raw is None:
+                return False
+            p = Pending.from_dict(raw)
+            (self.data.get("suggest") or {}).pop(pid, None)
+            (self.data.get("days") or {})[p.start.date().isoformat()] = []
+            await self._save()
+        await self._notify("Reisekosten", f"Reise vom {p.start:%d.%m.%Y} verworfen – keine Abrechnung.",
+                           {"tag": f"rk_{pid}"})
+        return True
 
     # ------------------------------------------------------------------ Abrechnung
     async def async_add_trip(self, p: Pending) -> None:
@@ -288,8 +353,8 @@ class ReisekostenManager:
             return folder, None
         return folder, "/local/" + "/".join(rel.parts) if rel.parts else "/local"
 
-    async def _upload_onedrive(self, path: Path) -> str | None:
-        """Lädt die PDF in den App-Ordner der HA-OneDrive-Integration. None = ok, sonst Fehlertext."""
+    async def _onedrive(self, filename: str, data: bytes | None = None, delete: bool = False) -> str | None:
+        """Datei im App-Ordner der HA-OneDrive-Integration ablegen oder löschen. None = ok, sonst Fehlertext."""
         try:
             from homeassistant.helpers.aiohttp_client import async_get_clientsession
             from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -301,55 +366,121 @@ class ReisekostenManager:
             entry = entries[0]
             session = OAuth2Session(self.hass, entry, await async_get_config_entry_implementation(self.hass, entry))
             await session.async_ensure_token_valid()
-            data = await self.hass.async_add_executor_job(path.read_bytes)
             url = (f"https://graph.microsoft.com/v1.0/me/drive/special/approot:/"
-                   f"{ONEDRIVE_FOLDER}/{path.name}:/content")
-            resp = await async_get_clientsession(self.hass).put(
-                url, data=data, headers={"Authorization": f"Bearer {session.token['access_token']}",
-                                         "Content-Type": "application/pdf"})
-            if resp.status not in (200, 201):
+                   f"{ONEDRIVE_FOLDER}/{filename}:" + ("" if delete else "/content"))
+            headers = {"Authorization": f"Bearer {session.token['access_token']}"}
+            web = async_get_clientsession(self.hass)
+            if delete:
+                resp = await web.delete(url, headers=headers)
+                ok = (200, 204, 404)
+            else:
+                resp = await web.put(url, data=data, headers={**headers, "Content-Type": "application/pdf"})
+                ok = (200, 201)
+            if resp.status not in ok:
                 return f"OneDrive antwortete mit Status {resp.status}."
             return None
         except Exception as err:  # noqa: BLE001
-            _LOGGER.warning("OneDrive-Upload fehlgeschlagen: %s", err)
-            return f"OneDrive-Upload fehlgeschlagen ({err})."
+            _LOGGER.warning("OneDrive-Zugriff fehlgeschlagen: %s", err)
+            return f"OneDrive-Zugriff fehlgeschlagen ({err})."
+
+    async def _upload_onedrive(self, path: Path) -> str | None:
+        data = await self.hass.async_add_executor_job(path.read_bytes)
+        return await self._onedrive(path.name, data=data)
+
+    async def _create_pdf(self, p: Pending, number: str, filename: str):
+        """Rechnet, schreibt die PDF und lädt sie ggf. nach OneDrive. -> (statement, path, link, extra)."""
+        statement = build_statement(to_trip(p), self._meta(p, number), self.rules(p.end.year))
+        folder, base_url = self._output()
+        path = folder / filename
+        await self.hass.async_add_executor_job(_render, statement, path)
+        extra = ""
+        if self.entry.options.get(OPT_UPLOAD_ONEDRIVE):
+            err = await self._upload_onedrive(path)
+            extra = (f"\nOneDrive: Apps/…/{ONEDRIVE_FOLDER}" if err is None else f"\n{err}")
+        return statement, path, (f"{base_url}/{filename}" if base_url else None), extra
+
+    async def _announce(self, p: Pending, number: str, statement, path: Path, link: str | None,
+                        extra: str, title: str = "Reisekostenabrechnung") -> None:
+        total = fmt_money(Decimal(statement.total))
+        if link:
+            await self._notify(f"{title} {number}", f"{p.name}: {total}. Zum Öffnen tippen.{extra}",
+                               {"tag": f"rk_{p.id}", "url": link, "clickAction": link})
+        else:   # Ordner außerhalb von www: kein Link möglich
+            await self._notify(f"{title} {number}", f"{p.name}: {total}. Gespeichert unter {path}{extra}",
+                               {"tag": f"rk_{p.id}"})
 
     async def _complete(self, p: Pending) -> None:
         self.data["counter"] += 1
         number = f"{p.end.year}{self.data['counter']:03d}"
-        statement = build_statement(to_trip(p), self._meta(p, number), self.rules(p.end.year))
         filename = f"Reisekostenabrechnung_{number}_{p.start:%Y-%m-%d}.pdf"
-        folder, base_url = self._output()
-        path = folder / filename
         try:
-            await self.hass.async_add_executor_job(_render, statement, path)
+            statement, path, link, extra = await self._create_pdf(p, number, filename)
         except Exception:  # noqa: BLE001
             self.data["counter"] -= 1
             _LOGGER.exception("PDF konnte nicht erzeugt werden")
             await self._notify("Reisekosten: Fehler",
-                               f"Die PDF konnte nicht nach {folder} geschrieben werden. "
+                               f"Die PDF konnte nicht nach {self._output()[0]} geschrieben werden. "
                                "Details stehen im HA-Log.")
             return
         self.data["pending"].pop(p.id, None)
         (self.data.get("suggest") or {}).pop(p.id, None)
         self.data["trips"].append({
-            "number": number, "file": filename, "start": p.start.isoformat(),
+            "number": number, "file": filename, "path": str(path), "start": p.start.isoformat(),
             "end": p.end.isoformat(), "name": p.name, "purpose": p.purpose,
-            "total": str(statement.total),
+            "total": str(statement.total), "data": p.to_dict(),
         })
         await self._save()
-        total = fmt_money(Decimal(statement.total))
+        await self._announce(p, number, statement, path, link, extra)
+        _LOGGER.info("Reisekostenabrechnung %s erstellt: %s", number, path)
+
+    # ------------------------------------------------------------------ Korrigieren / Löschen
+    def list_trips(self) -> list[dict[str, Any]]:
+        return [{k: t.get(k) for k in ("number", "start", "end", "name", "purpose", "total")}
+                for t in self.data["trips"]]
+
+    def _find_trip(self, number: str) -> dict[str, Any]:
+        for t in self.data["trips"]:
+            if t["number"] == str(number):
+                return t
+        raise ValueError(f"Abrechnung {number} nicht gefunden")
+
+    async def async_delete_trip(self, number: str) -> None:
+        """Abrechnung löschen (Eintrag, PDF, OneDrive-Kopie); der Zähler wird angepasst."""
+        async with self._lock:
+            trip = self._find_trip(number)
+            path = Path(trip.get("path") or self._output()[0] / trip["file"])
+            self.data["trips"].remove(trip)
+            nums = [int(t["number"][4:]) for t in self.data["trips"] if t["number"][4:].isdigit()]
+            self.data["counter"] = max(nums, default=0)
+            (self.data.get("days") or {}).pop(trip["start"][:10], None)
+            await self._save()
+        await self.hass.async_add_executor_job(lambda: path.unlink(missing_ok=True))
         extra = ""
         if self.entry.options.get(OPT_UPLOAD_ONEDRIVE):
-            err = await self._upload_onedrive(path)
-            extra = (f"\nOneDrive: Apps/…/{ONEDRIVE_FOLDER}" if err is None else f"\n{err}")
-        if base_url:
-            url = f"{base_url}/{filename}"
-            await self._notify(f"Reisekostenabrechnung {number}",
-                               f"{p.name}: {total}. Zum Öffnen tippen.{extra}",
-                               {"tag": f"rk_{p.id}", "url": url, "clickAction": url})
-        else:   # Ordner außerhalb von www: kein Link möglich
-            await self._notify(f"Reisekostenabrechnung {number}",
-                               f"{p.name}: {total}. Gespeichert unter {path}{extra}",
-                               {"tag": f"rk_{p.id}"})
-        _LOGGER.info("Reisekostenabrechnung %s erstellt: %s", number, path)
+            err = await self._onedrive(path.name, delete=True)
+            extra = "" if err is None else f"\n{err}"
+        await self._notify("Reisekosten", f"Abrechnung {number} gelöscht.{extra}")
+
+    async def async_regenerate(self, number: str, changes: dict[str, Any]) -> None:
+        """Abrechnung mit gleicher Nummer neu erzeugen, optional mit korrigierten Angaben."""
+        async with self._lock:
+            trip = self._find_trip(number)
+            if not trip.get("data"):
+                raise ValueError(f"Abrechnung {number} stammt aus einer älteren Version und lässt sich nicht "
+                                 "neu erzeugen. Bitte löschen und neu anlegen.")
+            p = Pending.from_dict(trip["data"])
+            if changes.get("name"):
+                p.name = changes["name"]
+            if changes.get("purpose"):
+                p.purpose = changes["purpose"]
+            if "km_car" in changes:
+                p.km_car = parse_km(str(changes["km_car"]))
+            if "overnight" in changes:
+                p.overnight = bool(changes["overnight"])
+            if "meals" in changes:
+                p.meals = parse_meals(changes["meals"], p.start, p.end)
+            statement, path, link, extra = await self._create_pdf(p, trip["number"], trip["file"])
+            trip.update({"path": str(path), "name": p.name, "purpose": p.purpose,
+                         "total": str(statement.total), "data": p.to_dict()})
+            await self._save()
+        await self._announce(p, trip["number"], statement, path, link, extra, title="Neu erzeugt:")

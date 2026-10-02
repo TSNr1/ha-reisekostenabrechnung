@@ -47,6 +47,9 @@ class Trip:
     overnight: bool = False                      # Auswärtsübernachtung?
     meals: dict[date, set[str]] = field(default_factory=dict)   # gestellte Mahlzeiten
     km: dict[str, Decimal] = field(default_factory=dict)        # car | motorcycle | scooter
+    # Nur eintägig: tatsächlich abwesende Zeit, wenn mehrere Abwesenheiten desselben
+    # Kalendertages zusammengerechnet werden (sonst: Ende minus Start).
+    away: timedelta | None = None
 
     def __post_init__(self) -> None:
         if self.start.tzinfo is None or self.end.tzinfo is None:
@@ -160,7 +163,7 @@ def per_diem(trip: Trip, rules: Rules) -> list[DayAmount]:
     raw: list[DayAmount] = []
 
     if d0 == d1:
-        span = _elapsed(s, e)
+        span = trip.away if trip.away is not None else _elapsed(s, e)
         if _qualifies(span, rules):
             raw.append(DayAmount(d0, "single", span, rules.p8))
 

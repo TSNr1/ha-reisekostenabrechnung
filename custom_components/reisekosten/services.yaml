@@ -42,3 +42,43 @@ answer:
       required: true
       selector:
         text:
+discard:
+  fields:
+    trip_id:
+      required: true
+      selector:
+        text:
+delete_trip:
+  fields:
+    number:
+      required: true
+      example: "2026003"
+      selector:
+        text:
+regenerate:
+  fields:
+    number:
+      required: true
+      example: "2026003"
+      selector:
+        text:
+    name:
+      selector:
+        text:
+    purpose:
+      selector:
+        text:
+    overnight:
+      selector:
+        boolean:
+    km_car:
+      selector:
+        number:
+          min: 0
+          max: 5000
+          step: 0.1
+          unit_of_measurement: km
+    meals:
+      selector:
+        text:
+list_trips:

@@ -13,7 +13,7 @@ from homeassistant.helpers import selector
 from .const import (
     ACC_CONTRA, ACC_KM, ACC_PAYMENT, ACC_PER_DIEM, CONF_CALENDARS, CONF_CITY, CONF_COMPANY,
     CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE, DEFAULT_ZONE, DOMAIN,
-    OPT_ACCOUNTS, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE,
+    OPT_ACCOUNTS, OPT_CALENDAR_REQUIRED, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE,
 )
 from .core.rules import MIDNIGHT_RULES, Rules, rules_for
 
@@ -110,6 +110,7 @@ class ReisekostenOptionsFlow(OptionsFlow):
             chosen = (user_input.get(OPT_OUTPUT_DIR) or "").strip()
             out[OPT_OUTPUT_DIR] = "" if chosen == default_dir else chosen
             out[OPT_UPLOAD_ONEDRIVE] = bool(user_input.get(OPT_UPLOAD_ONEDRIVE, False))
+            out[OPT_CALENDAR_REQUIRED] = bool(user_input.get(OPT_CALENDAR_REQUIRED, False))
             return self.async_create_entry(data=out)
 
         fields = dict(_general_schema(self.hass, cur).schema)
@@ -120,6 +121,8 @@ class ReisekostenOptionsFlow(OptionsFlow):
         fields[vol.Optional(OPT_OUTPUT_DIR, default=chosen)] = selector.SelectSelector(
             selector.SelectSelectorConfig(options=locations, custom_value=True,
                                           mode=selector.SelectSelectorMode.DROPDOWN))
+        fields[vol.Optional(OPT_CALENDAR_REQUIRED, default=bool(cur.get(OPT_CALENDAR_REQUIRED, False)))] = \
+            selector.BooleanSelector()
         fields[vol.Optional(OPT_UPLOAD_ONEDRIVE, default=bool(cur.get(OPT_UPLOAD_ONEDRIVE, False)))] = \
             selector.BooleanSelector()
         return self.async_show_form(step_id="general", data_schema=vol.Schema(fields))

@@ -25,6 +25,10 @@ Optionen → *Grunddaten* (Person, Zone, Handy, Name/Firma/Adresse, Kalender, Sp
 ## Dienste
 - `reisekosten.add_trip` – Reise manuell anlegen (`start`, `end`; nicht angegebene Felder werden per Handy-Rückfrage erfragt)
 - `reisekosten.answer` – Rückfrage ohne Handy beantworten
+- `reisekosten.discard` – offene Reise verwerfen (keine Dienstreise)
+- `reisekosten.regenerate` – Abrechnung mit gleicher Nummer neu erzeugen, optional mit korrigierten Angaben
+- `reisekosten.delete_trip` – Abrechnung samt PDF (und OneDrive-Kopie) löschen
+- `reisekosten.list_trips` – erstellte Abrechnungen auflisten
 
 ## Änderungen
 Siehe [CHANGELOG.md](CHANGELOG.md).

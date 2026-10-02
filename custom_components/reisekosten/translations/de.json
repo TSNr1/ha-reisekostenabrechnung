@@ -38,7 +38,8 @@
           "city": "PLZ Ort",
           "calendars": "Kalender für Terminvorschläge (optional, Mehrfachauswahl)",
           "output_dir": "Speicherort der PDFs (Auswahl oder eigenen Pfad eintippen)",
-          "upload_onedrive": "Zusätzlich in OneDrive ablegen (App-Ordner der HA-OneDrive-Integration, Unterordner „Reisekosten“)"
+          "upload_onedrive": "Zusätzlich in OneDrive ablegen (App-Ordner der HA-OneDrive-Integration, Unterordner „Reisekosten“)",
+          "calendar_required": "Nur nachfragen, wenn ein Kalendertermin zur Reise passt (benötigt Kalender)"
         }
       },
       "rules": {
@@ -128,6 +129,60 @@
           "description": ""
         }
       }
+    },
+    "discard": {
+      "name": "Offene Reise verwerfen",
+      "description": "Verwirft eine offene Reise (keine Dienstreise).",
+      "fields": {
+        "trip_id": {
+          "name": "Reise-ID",
+          "description": "Start der Reise als JJJJMMTTHHMM."
+        }
+      }
+    },
+    "delete_trip": {
+      "name": "Abrechnung löschen",
+      "description": "Löscht Abrechnung, PDF und OneDrive-Kopie; die Nummer wird wieder frei, wenn es die letzte war.",
+      "fields": {
+        "number": {
+          "name": "Nummer",
+          "description": "Zum Beispiel 2026003."
+        }
+      }
+    },
+    "regenerate": {
+      "name": "Abrechnung neu erzeugen",
+      "description": "Erzeugt die PDF mit gleicher Nummer neu, optional mit korrigierten Angaben.",
+      "fields": {
+        "number": {
+          "name": "Nummer",
+          "description": "Zum Beispiel 2026003."
+        },
+        "name": {
+          "name": "Reise",
+          "description": ""
+        },
+        "purpose": {
+          "name": "Zweck",
+          "description": ""
+        },
+        "overnight": {
+          "name": "Übernachtung",
+          "description": ""
+        },
+        "km_car": {
+          "name": "Kilometer Pkw",
+          "description": ""
+        },
+        "meals": {
+          "name": "Mahlzeiten",
+          "description": "Zum Beispiel 08.01 FA, 09.01 M."
+        }
+      }
+    },
+    "list_trips": {
+      "name": "Abrechnungen auflisten",
+      "description": "Gibt alle erstellten Abrechnungen mit Nummer, Zeitraum und Betrag zurück."
     }
   }
 }

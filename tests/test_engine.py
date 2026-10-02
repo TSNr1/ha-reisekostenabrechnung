@@ -125,5 +125,15 @@ class RulesConfig(unittest.TestCase):
         self.assertEqual(rules_for(2030).p24, D("28"))
 
 
+class AwaySum(unittest.TestCase):
+    def test_away_duration_replaces_span_for_single_day(self):
+        from datetime import timedelta
+        r = Rules()
+        t = Trip(dt(2026, 3, 2, 7, 0), dt(2026, 3, 2, 19, 0), away=timedelta(hours=9))
+        self.assertEqual(per_diem(t, r)[0].gross, D("14"))
+        self.assertEqual(per_diem(Trip(dt(2026, 3, 2, 7, 0), dt(2026, 3, 2, 19, 0), away=timedelta(hours=6)), r), [])
+        self.assertEqual(len(per_diem(Trip(dt(2026, 3, 2, 7, 0), dt(2026, 3, 2, 19, 0)), r)), 1)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
