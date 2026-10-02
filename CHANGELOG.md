@@ -2,6 +2,11 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.8.2]
+### Verbessert
+- **Mehrere Kalendertermine pro Reise:** Überschneiden sich mehrere Termine mit der Abwesenheit (z. B. vier Termine an zwei Orten in zwei Wochen), werden sie nach Beginn sortiert zusammengefasst. Bei Adressen mit Postleitzahl wird nur der Ort übernommen, doppelte Einträge erscheinen nur einmal. Beispiel: Ziel „Sinsheim, Fellbach“, Zweck „Inhouse Reha-Med Sinsheim; VPT KGG Fellbach; TRENA Fellbach“.
+- Kurze Termine (unter 2 Stunden Überschneidung, z. B. ein Telefonat) werden ignoriert, sobald es einen längeren Termin gibt.
+
 ## [0.8.1]
 ### Behoben
 - Die neuen Dashboard-Entitäten aus 0.8.0 hatten keine Namen (alle hießen wie das Gerät, z. B. „Reisekosten Martin“, mit Entity-IDs wie `text.…_2`). Die Übersetzungen waren falsch aufgebaut und sind korrigiert.
