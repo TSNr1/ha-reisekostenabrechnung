@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/icon.png" width="128" alt="Reisekosten"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/TSNr1/ha-reisekostenabrechnung/main/docs/icon.png" width="128" alt="Reisekosten"></p>
 
 # Reisekosten für Home Assistant
 
@@ -8,7 +8,7 @@ Erstellt automatisch eine Reisekostenabrechnung (PDF) für jede Reise: Die Integ
 Verlässt sie die Heimzone, ist länger als die Mindestzeit (Standard: mehr als 8 Stunden) unterwegs und kommt zurück,
 fragt sie auf dem Handy nach Reiseziel, Zweck, Kilometern (und ggf. Übernachtung/Mahlzeiten) und erzeugt die PDF.
 
-<p align="center"><img src="docs/beispiel-abrechnung.png" width="420" alt="Beispiel einer erzeugten Abrechnung (Beispieldaten)"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/TSNr1/ha-reisekostenabrechnung/main/docs/beispiel-abrechnung.png" width="420" alt="Beispiel einer erzeugten Abrechnung (Beispieldaten)"></p>
 
 ## Was die Integration kann – und was nicht
 **Kann:** Reisen automatisch erkennen, per Handy nachfragen (Ziel, Zweck, Kilometer, Übernachtung, Mahlzeiten), Termine aus Kalendern vorschlagen, Verpflegungspauschalen nach deutschem Reisekostenrecht berechnen, PDF mit Buchungsliste erzeugen, optional nach OneDrive kopieren, Abrechnungen am Dashboard korrigieren.
