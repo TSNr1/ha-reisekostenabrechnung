@@ -320,6 +320,29 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):
             await self.m.async_regenerate(trip["number"], {})
 
+    async def test_summary_for_dashboard_entities(self):
+        calls = []
+        remove = self.m.add_listener(lambda: calls.append(1))
+        s = self.m.summary()
+        self.assertEqual((float(s["month_total"]), s["last"], s["open"], s["away_since"]), (0.0, None, [], None))
+        self.person("not_home", utc(2, 7, 0))
+        self.assertTrue(self.m.summary()["away_since"])
+        self.person("home", utc(2, 18, 30))
+        await TIMERS[-1][1](None)
+        s = self.m.summary()
+        self.assertEqual([o["waiting_for"] for o in s["open"]], ["name"])
+        self.assertTrue(calls)
+        await self.finish("10")
+        s = self.m.summary()
+        self.assertEqual((float(s["month_total"]), float(s["year_total"]), s["year_count"], s["open"]),
+                         (17.0, 17.0, 1, []))
+        self.assertEqual(s["last"]["number"], "2026001")
+        self.assertTrue(self.m.trip_link(s["last"]).startswith("/local/reisekosten/"))
+        remove()
+        n = len(calls)
+        await self.m._save()
+        self.assertEqual(len(calls), n)
+
     async def test_short_trip_is_ignored(self):
         self.person("not_home", utc(2, 8, 0))
         self.person("home", utc(2, 10, 0))

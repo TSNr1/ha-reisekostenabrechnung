@@ -44,6 +44,7 @@ class ReisekostenManager:
         self._store: Store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
         self.data: dict[str, Any] = {"counter": 0, "away_since": None, "pending": {}, "trips": []}
         self._unsubs: list = []
+        self._listeners: list = []
         self._arrival_timer = None
         self._lock = asyncio.Lock()
 
@@ -100,6 +101,43 @@ class ReisekostenManager:
 
     async def _save(self) -> None:
         await self._store.async_save(self.data)
+        for callback_ in list(self._listeners):
+            callback_()
+
+    def add_listener(self, callback_):
+        """Für Entitäten: wird bei jeder Änderung der Daten aufgerufen. Gibt eine Abmelde-Funktion zurück."""
+        self._listeners.append(callback_)
+        return lambda: self._listeners.remove(callback_) if callback_ in self._listeners else None
+
+    def trip_link(self, trip: dict[str, Any]) -> str | None:
+        """Link zur PDF, wenn sie unterhalb von <config>/www liegt."""
+        try:
+            rel = Path(trip.get("path") or "").resolve().relative_to(Path(self.hass.config.path("www")).resolve())
+        except ValueError:
+            return None
+        return "/local/" + "/".join(rel.parts)
+
+    def summary(self) -> dict[str, Any]:
+        """Kennzahlen für die Entitäten (Dashboard)."""
+        now = dt_util.now()
+        month, year = Decimal(0), Decimal(0)
+        year_count = 0
+        for t in self.data["trips"]:
+            end = datetime.fromisoformat(t["end"])
+            if end.year == now.year:
+                year += Decimal(t["total"])
+                year_count += 1
+                if end.month == now.month:
+                    month += Decimal(t["total"])
+        last = self.data["trips"][-1] if self.data["trips"] else None
+        open_trips = []
+        for raw in self.data["pending"].values():
+            p = Pending.from_dict(raw)
+            step = next_step(p, self.rules(p.end.year))
+            open_trips.append({"id": p.id, "start": p.start.isoformat(), "end": p.end.isoformat(),
+                               "name": p.name, "waiting_for": step or "fertig"})
+        return {"month_total": month, "year_total": year, "year_count": year_count, "last": last,
+                "open": open_trips, "away_since": self.data.get("away_since")}
 
     # ------------------------------------------------------------------ Personenerkennung
     def _is_home(self, state: State) -> bool | None:

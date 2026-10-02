@@ -22,6 +22,40 @@ In den Grunddaten können ein oder mehrere Kalender gewählt werden. Nach einer 
 ## Einstellungen
 Optionen → *Grunddaten* (Person, Zone, Handy, Name/Firma/Adresse, Kalender, Speicherort, OneDrive) und *Rechtliche Vorgaben und Konten*. Ein Gerätewechsel ist dort ohne Neueinrichtung möglich.
 
+## Entitäten fürs Dashboard
+Die Integration legt ein Gerät „Reisekosten“ mit diesen Entitäten an (die IDs hängen von der Sprache ab, hier die deutschen):
+
+| Entität | Inhalt |
+|---|---|
+| `binary_sensor.reisekosten_unterwegs` | An, solange die Person außerhalb der Zone ist (Attribut `seit`) |
+| `sensor.reisekosten_letzte_abrechnung` | Nummer der letzten Abrechnung; Attribute `betrag`, `reise`, `zweck`, `von`, `bis`, `datei`, `link` |
+| `sensor.reisekosten_summe_monat` | Summe der Abrechnungen im laufenden Monat (EUR) |
+| `sensor.reisekosten_summe_jahr` | Summe im laufenden Jahr (EUR) |
+| `sensor.reisekosten_reisen_dieses_jahr` | Anzahl der Abrechnungen im laufenden Jahr |
+| `sensor.reisekosten_offene_reisen` | Anzahl unbeantworteter Reisen; Attribut `reisen` mit Start, Ende und der offenen Frage |
+
+Beispielkarte:
+
+```yaml
+type: entities
+title: Reisekosten
+entities:
+  - binary_sensor.reisekosten_unterwegs
+  - sensor.reisekosten_letzte_abrechnung
+  - sensor.reisekosten_summe_monat
+  - sensor.reisekosten_summe_jahr
+  - sensor.reisekosten_reisen_dieses_jahr
+  - sensor.reisekosten_offene_reisen
+```
+
+Link zur letzten PDF (nur bei Ablage unter `www`):
+
+```yaml
+type: markdown
+content: >
+  [Letzte Abrechnung öffnen]({{ state_attr('sensor.reisekosten_letzte_abrechnung', 'link') }})
+```
+
 ## Dienste
 - `reisekosten.add_trip` – Reise manuell anlegen (`start`, `end`; nicht angegebene Felder werden per Handy-Rückfrage erfragt)
 - `reisekosten.answer` – Rückfrage ohne Handy beantworten

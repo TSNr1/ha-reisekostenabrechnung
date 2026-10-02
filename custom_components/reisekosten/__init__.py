@@ -16,6 +16,7 @@ from .manager import ReisekostenManager
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORMS = ["sensor", "binary_sensor"]
 SERVICE_ADD_TRIP = "add_trip"
 SERVICE_ANSWER = "answer"
 SERVICE_DISCARD = "discard"
@@ -96,6 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.services.async_register(DOMAIN, SERVICE_REGENERATE, regenerate, schema=REGENERATE_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_LIST, list_trips, supports_response=SupportsResponse.ONLY)
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
@@ -104,6 +106,8 @@ async def _async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> Non
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
     manager: ReisekostenManager = hass.data[DOMAIN].pop(entry.entry_id)
     manager.async_stop()
     if not hass.data[DOMAIN]:

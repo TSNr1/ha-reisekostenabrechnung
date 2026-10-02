@@ -2,6 +2,10 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.7.0]
+### Neu
+- **Entitäten fürs Dashboard:** Neues Gerät „Reisekosten“ mit „Unterwegs“ (an/aus), „Letzte Abrechnung“ (mit Betrag, Zeitraum und Link zur PDF), „Summe Monat“, „Summe Jahr“, „Reisen dieses Jahr“ und „Offene Reisen“. Beispielkarten stehen im README.
+
 ## [0.6.1]
 ### Neu
 - **Haftungsausschluss** im README (keine Gewähr, keine Steuerberatung, eigene Prüfung, Datenschutzhinweis) und als Hinweis im Einrichtungsdialog.
@@ -46,6 +50,7 @@ Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Ch
 - Einrichtung über die Oberfläche, automatische Erkennung über eine `person`-Entität, Rückfragen auf dem Handy, PDF-Abrechnung (Aufstellung und Buchungsliste), fortlaufende Nummern, Dienste `add_trip` und `answer`.
 - Rechtliche Vorgaben einstellbar: Pauschalen, Mindestzeit, Kürzungen, Kilometersätze, Mitternachtsregel, Konten.
 
+[0.7.0]: https://github.com/TSNr1/ha-reisekostenabrechnung/releases/tag/v0.7.0
 [0.6.1]: https://github.com/TSNr1/ha-reisekostenabrechnung/releases/tag/v0.6.1
 [0.6.0]: https://github.com/TSNr1/ha-reisekostenabrechnung/releases/tag/v0.6.0
 [0.5.1]: https://github.com/TSNr1/ha-reisekostenabrechnung/releases/tag/v0.5.1

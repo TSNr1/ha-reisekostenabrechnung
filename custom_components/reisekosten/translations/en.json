@@ -184,5 +184,29 @@
       "name": "List statements",
       "description": "Returns all statements with number, period and amount."
     }
+  },
+  "entity": {
+    "sensor": {
+      "last_statement": {
+        "name": "Last statement"
+      },
+      "month_total": {
+        "name": "Total this month"
+      },
+      "year_total": {
+        "name": "Total this year"
+      },
+      "year_count": {
+        "name": "Trips this year"
+      },
+      "open_trips": {
+        "name": "Open trips"
+      }
+    },
+    "binary_sensor": {
+      "away": {
+        "name": "Away"
+      }
+    }
   }
 }

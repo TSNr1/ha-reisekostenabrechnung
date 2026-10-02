@@ -184,5 +184,29 @@
       "name": "Abrechnungen auflisten",
       "description": "Gibt alle erstellten Abrechnungen mit Nummer, Zeitraum und Betrag zurück."
     }
+  },
+  "entity": {
+    "sensor": {
+      "last_statement": {
+        "name": "Letzte Abrechnung"
+      },
+      "month_total": {
+        "name": "Summe Monat"
+      },
+      "year_total": {
+        "name": "Summe Jahr"
+      },
+      "year_count": {
+        "name": "Reisen dieses Jahr"
+      },
+      "open_trips": {
+        "name": "Offene Reisen"
+      }
+    },
+    "binary_sensor": {
+      "away": {
+        "name": "Unterwegs"
+      }
+    }
   }
 }
