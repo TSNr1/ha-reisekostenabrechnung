@@ -11,7 +11,8 @@
           "person_name": "Name auf der Abrechnung",
           "company": "Firma",
           "street": "Straße",
-          "city": "PLZ Ort"
+          "city": "PLZ Ort",
+          "calendars": "Kalender für Terminvorschläge (optional, Mehrfachauswahl)"
         }
       }
     }
@@ -19,6 +20,28 @@
   "options": {
     "step": {
       "init": {
+        "title": "Reisekosten",
+        "menu_options": {
+          "general": "Grunddaten: Person, Handy, Kalender, Speicherort",
+          "rules": "Rechtliche Vorgaben und Konten"
+        }
+      },
+      "general": {
+        "title": "Grunddaten",
+        "data": {
+          "person": "Zu überwachende Person",
+          "zone": "Wohnung / Betriebsstätte (Zone)",
+          "notify_service": "Handy für die Rückfragen (notify.mobile_app_…)",
+          "person_name": "Name auf der Abrechnung",
+          "company": "Firma",
+          "street": "Straße",
+          "city": "PLZ Ort",
+          "calendars": "Kalender für Terminvorschläge (optional, Mehrfachauswahl)",
+          "output_dir": "Speicherort der PDFs (Auswahl oder eigenen Pfad eintippen)",
+          "upload_onedrive": "Zusätzlich in OneDrive ablegen (App-Ordner der HA-OneDrive-Integration, Unterordner „Reisekosten“)"
+        }
+      },
+      "rules": {
         "title": "Rechtliche Vorgaben",
         "data": {
           "country": "Land (Anzeige)",
@@ -36,12 +59,10 @@
           "km_scooter": "Kilometersatz Motorroller (EUR/km)",
           "lodging_flat": "Übernachtungspauschale (EUR)",
           "midnight_rule": "Reise über Mitternacht ohne Übernachtung: Zuordnung",
-          "output_dir": "Speicherort der PDFs (Auswahl oder eigenen Pfad eintippen)",
           "account_per_diem": "Konto Verpflegungspauschale",
           "account_km": "Konto Fahrtkosten",
           "account_contra": "Gegenkonto",
-          "payment": "Zahlweise",
-          "upload_onedrive": "Zusätzlich in OneDrive ablegen (App-Ordner der HA-OneDrive-Integration, Unterordner „Reisekosten“)"
+          "payment": "Zahlweise"
         }
       }
     }

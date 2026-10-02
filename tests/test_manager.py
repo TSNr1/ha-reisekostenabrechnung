@@ -92,6 +92,7 @@ class FakeHass:
         self._states = {}
         self.calls = []
         self.person_cb = None
+        self.calendar_response = {}
         self.bus = types.SimpleNamespace(async_listen=lambda *_: (lambda: None))
         self.config = types.SimpleNamespace(path=lambda *p: str(Path(tmp, *p)))
         self.services = types.SimpleNamespace(async_call=self._call)
@@ -99,8 +100,10 @@ class FakeHass:
     def _get(self, entity_id):
         return self._states.get(entity_id)
 
-    async def _call(self, domain, service, data, blocking=False):
+    async def _call(self, domain, service, data, blocking=False, return_response=False):
         self.calls.append((domain, service, data))
+        if (domain, service) == ("calendar", "get_events"):
+            return self.calendar_response
 
     async def async_add_executor_job(self, fn, *args):
         return fn(*args)
@@ -202,6 +205,37 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(Path(self.tmp, "www", "reisekosten", trip["file"]).exists())
         self.assertIn("OneDrive", self.last_notify()["message"])
 
+    async def test_calendar_suggestion_can_be_accepted(self):
+        self.m.entry = types.SimpleNamespace(data=Entry.data, options={"calendars": ["calendar.work"]})
+        self.hass.calendar_response = {"calendar.work": {"events": [
+            {"start": "2026-03-02T08:00:00+01:00", "end": "2026-03-02T16:00:00+01:00",
+             "summary": "Schulung ABC", "location": "Musterstadt"},
+            {"start": "2026-03-02T09:00:00+01:00", "end": "2026-03-02T09:30:00+01:00", "summary": "Telefonat"}]}}
+        self.person("not_home", utc(2, 7, 0))
+        self.person("home", utc(2, 18, 30))
+        await TIMERS[0][1](None)
+        note = self.last_notify()
+        self.assertIn("Vorschlag aus dem Kalender: Musterstadt", note["message"])
+        pid = next(iter(self.m.data["pending"]))
+        self.assertEqual(note["data"]["actions"][1]["action"], f"RK_{pid}|name|accept")
+        await self.m._on_action(Event({"action": f"RK_{pid}|name|accept"}))
+        self.assertIn("Vorschlag aus dem Kalender: Schulung ABC", self.last_notify()["message"])
+        await self.m._on_action(Event({"action": f"RK_{pid}|purpose|accept"}))
+        self.assertEqual(self.m.data["pending"][pid]["name"], "Musterstadt")
+        self.assertEqual(self.m.data["pending"][pid]["purpose"], "Schulung ABC")
+
+    async def test_calendar_failure_is_harmless(self):
+        self.m.entry = types.SimpleNamespace(data=Entry.data, options={"calendars": ["calendar.work"]})
+        async def broken(domain, service, data, blocking=False, return_response=False):
+            if domain == "calendar":
+                raise RuntimeError("Kalender weg")
+            self.hass.calls.append((domain, service, data))
+        self.hass.services.async_call = broken
+        self.person("not_home", utc(2, 7, 0))
+        self.person("home", utc(2, 18, 30))
+        await TIMERS[0][1](None)
+        self.assertIn("Wohin ging die Reise", self.last_notify()["message"])
+
     async def test_short_trip_is_ignored(self):
         self.person("not_home", utc(2, 8, 0))
         self.person("home", utc(2, 10, 0))
@@ -230,7 +264,7 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.m.data["trips"][0]["total"], "280.00")
 
     async def test_notify_failure_falls_back_to_persistent_notification(self):
-        async def broken(domain, service, data, blocking=False):
+        async def broken(domain, service, data, blocking=False, return_response=False):
             if domain == "notify":
                 raise RuntimeError("kein Handy")
             self.hass.calls.append((domain, service, data))

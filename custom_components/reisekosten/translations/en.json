@@ -11,7 +11,8 @@
           "person_name": "Name on statement",
           "company": "Company",
           "street": "Street",
-          "city": "Postcode, city"
+          "city": "Postcode, city",
+          "calendars": "Calendars for event suggestions (optional, multiple)"
         }
       }
     }
@@ -19,6 +20,28 @@
   "options": {
     "step": {
       "init": {
+        "title": "Travel expenses",
+        "menu_options": {
+          "general": "General: person, phone, calendars, storage folder",
+          "rules": "Legal rules and accounts"
+        }
+      },
+      "general": {
+        "title": "General",
+        "data": {
+          "person": "Person to track",
+          "zone": "Home / business premises (zone)",
+          "notify_service": "Phone for the questions (notify.mobile_app_…)",
+          "person_name": "Name on the statement",
+          "company": "Company",
+          "street": "Street",
+          "city": "Postcode and city",
+          "calendars": "Calendars for event suggestions (optional, multiple)",
+          "output_dir": "Folder for the PDFs (pick one or type your own path)",
+          "upload_onedrive": "Also upload to OneDrive (app folder of the HA OneDrive integration, subfolder “Reisekosten”)"
+        }
+      },
+      "rules": {
         "title": "Legal rules",
         "data": {
           "country": "Country (display)",
@@ -36,12 +59,10 @@
           "km_scooter": "Mileage rate scooter (EUR/km)",
           "lodging_flat": "Lodging flat rate (EUR)",
           "midnight_rule": "Trip past midnight without overnight stay: assign to",
-          "output_dir": "Folder for the PDFs (pick one or type your own path)",
           "account_per_diem": "Account per diem",
           "account_km": "Account mileage",
           "account_contra": "Counter account",
-          "payment": "Payment method",
-          "upload_onedrive": "Also upload to OneDrive (app folder of the HA OneDrive integration, subfolder “Reisekosten”)"
+          "payment": "Payment method"
         }
       }
     }

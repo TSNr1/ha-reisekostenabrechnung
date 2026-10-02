@@ -16,10 +16,11 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     ACC_CONTRA, ACC_KM, ACC_PAYMENT, ACC_PER_DIEM, ACTION_PREFIX, ARRIVAL_DEBOUNCE_SECONDS,
-    CONF_CITY, CONF_COMPANY, CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE,
+    CONF_CALENDARS, CONF_CITY, CONF_COMPANY, CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE,
     DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE, ONEDRIVE_FOLDER, OUTPUT_SUBDIR, OUTPUT_URL, STORAGE_KEY,
     STORAGE_VERSION,
 )
+from .core.calendar_match import pick_event
 from .core.engine import Accounts, Meta, build_statement, fmt_money
 from .core.rules import rules_for
 from .core.wizard import Pending, apply_answer, next_step, qualifies, to_trip
@@ -154,6 +155,7 @@ class ReisekostenManager:
                 await self._save()
                 return
             p = Pending(id=start.strftime("%Y%m%d%H%M"), start=start, end=end)
+            await self._remember_suggestion(p)
             await self._advance(p)
 
     # ------------------------------------------------------------------ Rückfragen
@@ -189,6 +191,11 @@ class ReisekostenManager:
         if text_input:
             actions = [{"action": f"{ACTION_PREFIX}{p.id}|{step}|reply", "title": "Antworten",
                         "behavior": "textInput", "textInputButtonTitle": "Senden"}]
+            suggestion = (self.data.get("suggest") or {}).get(p.id, {}).get(step)
+            if suggestion:
+                message += f"\nVorschlag aus dem Kalender: {suggestion}"
+                actions.append({"action": f"{ACTION_PREFIX}{p.id}|{step}|accept",
+                                "title": f"Übernehmen: {suggestion}"[:40]})
         else:
             actions = [{"action": f"{ACTION_PREFIX}{p.id}|{step}|yes", "title": "Ja"},
                        {"action": f"{ACTION_PREFIX}{p.id}|{step}|no", "title": "Nein"}]
@@ -218,7 +225,10 @@ class ReisekostenManager:
             pid, step, value = action[len(ACTION_PREFIX):].split("|", 2)
         except ValueError:
             return
-        text = event.data.get("reply_text", "") if value == "reply" else value
+        if value == "accept":
+            text = (self.data.get("suggest") or {}).get(pid, {}).get(step, "")
+        else:
+            text = event.data.get("reply_text", "") if value == "reply" else value
         await self.async_answer(pid, step, text)
 
     async def async_answer(self, pid: str, step: str, text: str) -> bool:
@@ -241,9 +251,29 @@ class ReisekostenManager:
 
     # ------------------------------------------------------------------ Abrechnung
     async def async_add_trip(self, p: Pending) -> None:
-        """Manuell angelegte Reise (Service reisekosten.add_trip) ohne Rückfragen."""
+        """Manuell angelegte Reise (Service reisekosten.add_trip); fehlende Felder werden erfragt."""
         async with self._lock:
+            await self._remember_suggestion(p)
             await self._advance(p)
+
+    async def _remember_suggestion(self, p: Pending) -> None:
+        """Sucht in den gewählten Kalendern nach einem Termin zur Reise (Vorschlag für Ziel/Zweck)."""
+        calendars = self.cfg.get(CONF_CALENDARS) or []
+        if not calendars or (p.name is not None and p.purpose is not None):
+            return
+        try:
+            resp = await self.hass.services.async_call(
+                "calendar", "get_events",
+                {"entity_id": list(calendars), "start_date_time": p.start.isoformat(),
+                 "end_date_time": p.end.isoformat()},
+                blocking=True, return_response=True)
+        except Exception as err:  # noqa: BLE001 - Kalender ist nur eine Hilfe
+            _LOGGER.warning("Kalender konnte nicht gelesen werden: %s", err)
+            return
+        events = [ev for cal in (resp or {}).values() for ev in (cal or {}).get("events", [])]
+        suggestion = pick_event(events, p.start, p.end)
+        if suggestion:
+            self.data.setdefault("suggest", {})[p.id] = suggestion
 
     def _output(self) -> tuple[Path, str | None]:
         """Zielordner und (nur unterhalb von <config>/www) die URL, unter der er erreichbar ist."""
@@ -301,6 +331,7 @@ class ReisekostenManager:
                                "Details stehen im HA-Log.")
             return
         self.data["pending"].pop(p.id, None)
+        (self.data.get("suggest") or {}).pop(p.id, None)
         self.data["trips"].append({
             "number": number, "file": filename, "start": p.start.isoformat(),
             "end": p.end.isoformat(), "name": p.name, "purpose": p.purpose,

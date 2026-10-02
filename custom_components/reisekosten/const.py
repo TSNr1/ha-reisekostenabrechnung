@@ -8,6 +8,7 @@ CONF_COMPANY = "company"
 CONF_NAME = "person_name"
 CONF_STREET = "street"
 CONF_CITY = "city"
+CONF_CALENDARS = "calendars"
 
 # Optionen
 OPT_RULES = "rules"

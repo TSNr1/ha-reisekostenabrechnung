@@ -14,6 +14,12 @@ In den Optionen kann ein anderer **Speicherort** gewählt werden (z. B. `/media/
 Optional wird die PDF zusätzlich in den App-Ordner der Home-Assistant-OneDrive-Integration (Unterordner `Reisekosten`) hochgeladen; das nutzt die vorhandene OneDrive-Anmeldung.
 Nur Ordner unterhalb von `www` bekommen einen Link in der Benachrichtigung, sonst wird der Pfad angezeigt.
 
+## Kalender
+In den Grunddaten können ein oder mehrere Kalender gewählt werden. Nach einer Reise sucht die Integration den Termin mit der größten Überschneidung und schlägt Ziel (Ort, sonst Titel) und Zweck (Titel) vor; auf dem Handy genügt ein Tipp auf „Übernehmen“.
+
+## Einstellungen
+Optionen → *Grunddaten* (Person, Zone, Handy, Name/Firma/Adresse, Kalender, Speicherort, OneDrive) und *Rechtliche Vorgaben und Konten*. Ein Gerätewechsel ist dort ohne Neueinrichtung möglich.
+
 ## Dienste
 - `reisekosten.add_trip` – Reise manuell anlegen (`start`, `end`; nicht angegebene Felder werden per Handy-Rückfrage erfragt)
 - `reisekosten.answer` – Rückfrage ohne Handy beantworten
