@@ -191,6 +191,17 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         self.assertIn(target, note["message"])
         self.assertNotIn("url", note["data"])
 
+    async def test_onedrive_failure_is_reported_but_pdf_is_kept(self):
+        self.m.entry = types.SimpleNamespace(data=Entry.data, options={"upload_onedrive": True})
+        self.person("not_home", utc(2, 7, 0))
+        self.person("home", utc(2, 18, 30))
+        await TIMERS[0][1](None)
+        for step, text in (("name", "A"), ("purpose", "B"), ("km", "-"), ("meals", "-")):
+            await self.answer(step, text)
+        trip = self.m.data["trips"][0]
+        self.assertTrue(Path(self.tmp, "www", "reisekosten", trip["file"]).exists())
+        self.assertIn("OneDrive", self.last_notify()["message"])
+
     async def test_short_trip_is_ignored(self):
         self.person("not_home", utc(2, 8, 0))
         self.person("home", utc(2, 10, 0))

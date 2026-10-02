@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ACC_CONTRA, ACC_KM, ACC_PAYMENT, ACC_PER_DIEM, ACTION_PREFIX, ARRIVAL_DEBOUNCE_SECONDS,
     CONF_CITY, CONF_COMPANY, CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE,
-    DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_OUTPUT_DIR, OPT_RULES, OUTPUT_SUBDIR, OUTPUT_URL, STORAGE_KEY,
+    DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE, ONEDRIVE_FOLDER, OUTPUT_SUBDIR, OUTPUT_URL, STORAGE_KEY,
     STORAGE_VERSION,
 )
 from .core.engine import Accounts, Meta, build_statement, fmt_money
@@ -258,6 +258,32 @@ class ReisekostenManager:
             return folder, None
         return folder, "/local/" + "/".join(rel.parts) if rel.parts else "/local"
 
+    async def _upload_onedrive(self, path: Path) -> str | None:
+        """Lädt die PDF in den App-Ordner der HA-OneDrive-Integration. None = ok, sonst Fehlertext."""
+        try:
+            from homeassistant.helpers.aiohttp_client import async_get_clientsession
+            from homeassistant.helpers.config_entry_oauth2_flow import (
+                OAuth2Session, async_get_config_entry_implementation)
+
+            entries = self.hass.config_entries.async_entries("onedrive")
+            if not entries:
+                return "Die OneDrive-Integration ist in Home Assistant nicht eingerichtet."
+            entry = entries[0]
+            session = OAuth2Session(self.hass, entry, await async_get_config_entry_implementation(self.hass, entry))
+            await session.async_ensure_token_valid()
+            data = await self.hass.async_add_executor_job(path.read_bytes)
+            url = (f"https://graph.microsoft.com/v1.0/me/drive/special/approot:/"
+                   f"{ONEDRIVE_FOLDER}/{path.name}:/content")
+            resp = await async_get_clientsession(self.hass).put(
+                url, data=data, headers={"Authorization": f"Bearer {session.token['access_token']}",
+                                         "Content-Type": "application/pdf"})
+            if resp.status not in (200, 201):
+                return f"OneDrive antwortete mit Status {resp.status}."
+            return None
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("OneDrive-Upload fehlgeschlagen: %s", err)
+            return f"OneDrive-Upload fehlgeschlagen ({err})."
+
     async def _complete(self, p: Pending) -> None:
         self.data["counter"] += 1
         number = f"{p.end.year}{self.data['counter']:03d}"
@@ -282,13 +308,17 @@ class ReisekostenManager:
         })
         await self._save()
         total = fmt_money(Decimal(statement.total))
+        extra = ""
+        if self.entry.options.get(OPT_UPLOAD_ONEDRIVE):
+            err = await self._upload_onedrive(path)
+            extra = (f"\nOneDrive: Apps/…/{ONEDRIVE_FOLDER}" if err is None else f"\n{err}")
         if base_url:
             url = f"{base_url}/{filename}"
             await self._notify(f"Reisekostenabrechnung {number}",
-                               f"{p.name}: {total}. Zum Öffnen tippen.",
+                               f"{p.name}: {total}. Zum Öffnen tippen.{extra}",
                                {"tag": f"rk_{p.id}", "url": url, "clickAction": url})
         else:   # Ordner außerhalb von www: kein Link möglich
             await self._notify(f"Reisekostenabrechnung {number}",
-                               f"{p.name}: {total}. Gespeichert unter {path}",
+                               f"{p.name}: {total}. Gespeichert unter {path}{extra}",
                                {"tag": f"rk_{p.id}"})
         _LOGGER.info("Reisekostenabrechnung %s erstellt: %s", number, path)

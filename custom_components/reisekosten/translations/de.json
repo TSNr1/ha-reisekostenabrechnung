@@ -36,11 +36,12 @@
           "km_scooter": "Kilometersatz Motorroller (EUR/km)",
           "lodging_flat": "Übernachtungspauschale (EUR)",
           "midnight_rule": "Reise über Mitternacht ohne Übernachtung: Zuordnung",
-          "output_dir": "Speicherort der PDFs (Ordner; leer = /config/www/reisekosten)",
+          "output_dir": "Speicherort der PDFs (Auswahl oder eigenen Pfad eintippen)",
           "account_per_diem": "Konto Verpflegungspauschale",
           "account_km": "Konto Fahrtkosten",
           "account_contra": "Gegenkonto",
-          "payment": "Zahlweise"
+          "payment": "Zahlweise",
+          "upload_onedrive": "Zusätzlich in OneDrive ablegen (App-Ordner der HA-OneDrive-Integration, Unterordner „Reisekosten“)"
         }
       }
     }

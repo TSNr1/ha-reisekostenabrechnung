@@ -36,11 +36,12 @@
           "km_scooter": "Mileage rate scooter (EUR/km)",
           "lodging_flat": "Lodging flat rate (EUR)",
           "midnight_rule": "Trip past midnight without overnight stay: assign to",
-          "output_dir": "Folder for the PDFs (empty = /config/www/reisekosten)",
+          "output_dir": "Folder for the PDFs (pick one or type your own path)",
           "account_per_diem": "Account per diem",
           "account_km": "Account mileage",
           "account_contra": "Counter account",
-          "payment": "Payment method"
+          "payment": "Payment method",
+          "upload_onedrive": "Also upload to OneDrive (app folder of the HA OneDrive integration, subfolder “Reisekosten”)"
         }
       }
     }

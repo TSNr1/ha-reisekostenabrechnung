@@ -12,6 +12,8 @@ CONF_CITY = "city"
 # Optionen
 OPT_RULES = "rules"
 OPT_ACCOUNTS = "accounts"
+OPT_UPLOAD_ONEDRIVE = "upload_onedrive"
+ONEDRIVE_FOLDER = "Reisekosten"        # Unterordner im App-Ordner von OneDrive
 OPT_OUTPUT_DIR = "output_dir"       # leer = <config>/www/reisekosten
 ACC_PER_DIEM = "account_per_diem"
 ACC_KM = "account_km"
