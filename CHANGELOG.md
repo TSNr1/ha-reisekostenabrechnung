@@ -2,6 +2,13 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.10.1]
+### Behoben
+- **Tippen auf die Benachrichtigung „Abrechnung erstellt“ öffnete in der Android-App nur „401: Unauthorized“.** Die App hängt an relative Links eigene Parameter an, wodurch der signierte Link ungültig wurde. Der Link in der Benachrichtigung ist jetzt eine vollständige Adresse (externe URL bevorzugt, sonst interne) und öffnet das PDF im Browser.
+### Hinweise
+- In Home Assistant sollte unter Einstellungen → System → Netzwerk eine externe oder interne URL eingetragen sein. Das Sensor-Attribut `link` bleibt ein relativer Pfad.
+- Nach dem Update Home Assistant neu starten.
+
 ## [0.10.0]
 ### Behoben (Datenschutz)
 - **PDFs sind nicht mehr öffentlich abrufbar.** Bisher lagen sie standardmäßig in `www/reisekosten` und waren damit ohne Anmeldung unter `/local/…` erreichbar. Der neue Standardordner ist `<config>/reisekosten`. Die PDFs werden nur noch über Home Assistant ausgeliefert, mit Anmeldung oder über einen signierten, befristeten Link (Handy-Benachrichtigung 7 Tage, Sensor-Attribut `link` 24 Stunden, stündlich erneuert).

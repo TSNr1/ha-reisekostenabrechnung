@@ -204,6 +204,18 @@ class ReisekostenManager:
             _LOGGER.warning("Link zur PDF konnte nicht signiert werden: %s", err)
             return None
 
+    def absolute_link(self, link: str) -> str:
+        """Vollständige Adresse (extern bevorzugt). Die Companion-App hängt an relative Links
+        eigene Parameter an und macht damit die Signatur ungültig (401); eine volle Adresse
+        öffnet sie im Browser unverändert."""
+        try:
+            from homeassistant.helpers.network import get_url
+
+            return get_url(self.hass, prefer_external=True) + link
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Keine Adresse für den PDF-Link ermittelt (%s), nutze relativen Link", err)
+            return link
+
     def trip_link(self, trip: dict[str, Any]) -> str | None:
         """Signierter Link zur PDF (24 Stunden gültig, der Sensor erneuert ihn stündlich)."""
         return self.signed_link(trip["number"], hours=24) if trip.get("number") else None
@@ -577,8 +589,9 @@ class ReisekostenManager:
                         extra: str, title: str = "Reisekostenabrechnung") -> None:
         total = fmt_money(Decimal(statement.total))
         if link:
+            full = self.absolute_link(link)
             await self._notify(f"{title} {number}", f"{p.name}: {total}. Zum Öffnen tippen.{extra}",
-                               {"tag": f"rk_{p.id}", "url": link, "clickAction": link})
+                               {"tag": f"rk_{p.id}", "url": full, "clickAction": full})
         else:   # Signatur nicht möglich: Pfad anzeigen
             await self._notify(f"{title} {number}", f"{p.name}: {total}. Gespeichert unter {path}{extra}",
                                {"tag": f"rk_{p.id}"})
