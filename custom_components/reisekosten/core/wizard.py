@@ -9,7 +9,7 @@ from decimal import Decimal, InvalidOperation
 from .engine import Trip, per_diem
 from .rules import Rules
 
-STEPS = ("name", "purpose", "km", "overnight", "meals")
+STEPS = ("activity", "name", "purpose", "km", "overnight", "meals")
 SKIP = {"", "-", "nein", "keine", "0"}
 MEAL_LETTERS = {"F": "breakfast", "M": "lunch", "A": "dinner"}
 
@@ -26,6 +26,7 @@ class Pending:
     meals: dict[date, set[str]] | None = None
     note: str = ""
     away_minutes: int | None = None      # Summe mehrerer Abwesenheiten am selben Tag
+    activity: str | None = "self"        # "self" (selbstständig) | "employee" (angestellt); None = noch fragen
 
     def to_dict(self) -> dict:
         return {
@@ -35,7 +36,7 @@ class Pending:
             "overnight": self.overnight,
             "meals": None if self.meals is None else
             {d.isoformat(): sorted(v) for d, v in self.meals.items()},
-            "note": self.note, "away_minutes": self.away_minutes,
+            "note": self.note, "away_minutes": self.away_minutes, "activity": self.activity,
         }
 
     @classmethod
@@ -51,6 +52,7 @@ class Pending:
             meals=None if meals is None else
             {date.fromisoformat(k): set(v) for k, v in meals.items()},
             note=data.get("note", ""), away_minutes=data.get("away_minutes"),
+            activity=data.get("activity", "self"),
         )
 
 
@@ -77,6 +79,8 @@ def qualifies_span(span: timedelta, rules: Rules) -> bool:
 
 
 def next_step(p: Pending, rules: Rules) -> str | None:
+    if p.activity is None:
+        return "activity"
     if p.name is None:
         return "name"
     if p.purpose is None:
@@ -152,7 +156,11 @@ def parse_meals(text: str, start: datetime, end: datetime) -> dict[date, set[str
 def apply_answer(p: Pending, step: str, text: str) -> None:
     """Übernimmt eine Antwort. Wirft ValueError bei Eingabefehlern."""
     text = (text or "").strip()
-    if step == "name":
+    if step == "activity":
+        if text.lower() not in ("self", "employee"):
+            raise ValueError("Bitte Selbstständig oder Angestellt wählen")
+        p.activity = text.lower()
+    elif step == "name":
         p.name = "Dienstreise" if text in ("", "-") else text
     elif step == "purpose":
         p.purpose = "Dienstreise" if text in ("", "-") else text

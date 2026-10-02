@@ -9,10 +9,14 @@
           "zone": "Wohnung / erste Tätigkeitsstätte (Zone)",
           "notify_service": "Handy-Benachrichtigung (notify.mobile_app_…)",
           "person_name": "Name auf der Abrechnung",
-          "company": "Firma",
+          "company": "Firma / Arbeitgeber",
           "street": "Straße",
           "city": "PLZ Ort",
-          "calendars": "Kalender für Terminvorschläge (optional, Mehrfachauswahl)"
+          "calendars": "Kalender für Terminvorschläge (optional, Mehrfachauswahl)",
+          "employment": "Tätigkeit",
+          "work_zone": "Arbeitsstätte (Zone, nur für Angestellte; Wege Wohnung–Arbeit sind keine Dienstreise)",
+          "chart": "Kontenrahmen für die Buchungsliste",
+          "odometer": "Kilometerzähler-Sensor (optional, für Kilometer-Vorschläge)"
         }
       }
     }
@@ -33,13 +37,17 @@
           "zone": "Wohnung / Betriebsstätte (Zone)",
           "notify_service": "Handy für die Rückfragen (notify.mobile_app_…)",
           "person_name": "Name auf der Abrechnung",
-          "company": "Firma",
+          "company": "Firma / Arbeitgeber",
           "street": "Straße",
           "city": "PLZ Ort",
           "calendars": "Kalender für Terminvorschläge (optional, Mehrfachauswahl)",
           "output_dir": "Speicherort der PDFs (Auswahl oder eigenen Pfad eintippen)",
           "upload_onedrive": "Zusätzlich in OneDrive ablegen (App-Ordner der HA-OneDrive-Integration, Unterordner „Reisekosten“)",
-          "calendar_required": "Nur nachfragen, wenn ein Kalendertermin zur Reise passt (benötigt Kalender)"
+          "calendar_required": "Nur nachfragen, wenn ein Kalendertermin zur Reise passt (benötigt Kalender)",
+          "employment": "Tätigkeit",
+          "work_zone": "Arbeitsstätte (Zone, nur für Angestellte; Wege Wohnung–Arbeit sind keine Dienstreise)",
+          "chart": "Kontenrahmen für die Buchungsliste",
+          "odometer": "Kilometerzähler-Sensor (optional, für Kilometer-Vorschläge)"
         }
       },
       "rules": {
@@ -74,6 +82,20 @@
         "larger_share": "Tag mit größerem Anteil",
         "end_day": "Rückkehrtag",
         "start_day": "Abreisetag"
+      }
+    },
+    "employment": {
+      "options": {
+        "self_employed": "Selbstständig",
+        "employee": "Angestellt",
+        "both": "Beides (bei jeder Reise nachfragen)"
+      }
+    },
+    "chart": {
+      "options": {
+        "skr03": "SKR03",
+        "skr04": "SKR04",
+        "custom": "Eigene Konten (unter „Rechtliche Vorgaben“ eintragen)"
       }
     }
   },

@@ -17,7 +17,8 @@ from homeassistant.util import dt as dt_util
 from .const import (
     ACC_CONTRA, ACC_KM, ACC_PAYMENT, ACC_PER_DIEM, ACTION_PREFIX, ARRIVAL_DEBOUNCE_SECONDS,
     CONF_CALENDARS, CONF_CITY, CONF_COMPANY, CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE,
-    DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_CALENDAR_REQUIRED, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE, ONEDRIVE_FOLDER, OUTPUT_SUBDIR, OUTPUT_URL, STORAGE_KEY,
+    ACCOUNT_TABLE, ACTIVITY_EMPLOYEE, ACTIVITY_SELF, CONF_CHART, CONF_EMPLOYMENT, CONF_ODOMETER,
+    CONF_WORK_ZONE, DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_CALENDAR_REQUIRED, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE, ONEDRIVE_FOLDER, OUTPUT_SUBDIR, OUTPUT_URL, STORAGE_KEY,
     STORAGE_VERSION,
 )
 from .core.calendar_match import pick_event
@@ -57,12 +58,21 @@ class ReisekostenManager:
     def cfg(self) -> dict[str, Any]:
         return {**self.entry.data, **self.entry.options}
 
+    def default_activity(self) -> str | None:
+        """Tätigkeit neuer Reisen; None = bei „beides“ per Handyfrage klären."""
+        return {"employee": ACTIVITY_EMPLOYEE, "both": None}.get(self.cfg.get(CONF_EMPLOYMENT), ACTIVITY_SELF)
+
     def rules(self, year: int):
         return rules_for(year, self.entry.options.get(OPT_RULES) or None)
 
     def _meta(self, p: Pending, number: str) -> Meta:
         c = self.cfg
         acc = c.get(OPT_ACCOUNTS) or {}
+        chart = ACCOUNT_TABLE.get(c.get(CONF_CHART) or "custom")
+        if chart:                                  # SKR03/SKR04: Konten nach Tätigkeit
+            per_diem, km = chart[p.activity or ACTIVITY_SELF]
+        else:
+            per_diem, km = acc.get(ACC_PER_DIEM, "4664"), acc.get(ACC_KM, "")
         person_state = self.hass.states.get(c[CONF_PERSON])
         user = (person_state.name if person_state else c[CONF_NAME]).replace(" ", "")
         return Meta(
@@ -74,7 +84,7 @@ class ReisekostenManager:
             + (f"; mehrere Abwesenheiten am {p.start:%d.%m.%Y} zusammengerechnet "
                f"({p.away_minutes // 60}:{p.away_minutes % 60:02d} Std.)" if p.away_minutes else ""),
             accounts=Accounts(
-                per_diem=acc.get(ACC_PER_DIEM, "4664"), km=acc.get(ACC_KM, ""),
+                per_diem=per_diem, km=km,
                 contra=acc.get(ACC_CONTRA, ""), payment=acc.get(ACC_PAYMENT, "Bar")),
         )
 
@@ -214,51 +224,79 @@ class ReisekostenManager:
                 "open": open_trips, "away_since": self.data.get("away_since")}
 
     # ------------------------------------------------------------------ Personenerkennung
-    def _is_home(self, state: State) -> bool | None:
-        if state.state in ("unknown", "unavailable"):
-            return None
-        zone_id = self.cfg.get(CONF_ZONE, DEFAULT_ZONE)
+    def _zone_matches(self, state: State, zone_id: str | None) -> bool:
+        if not zone_id:
+            return False
         if zone_id == DEFAULT_ZONE:
             return state.state == "home"
         zone = self.hass.states.get(zone_id)
         return zone is not None and state.state == zone.name
+
+    def _base(self, state: State | None) -> str | bool | None:
+        """'home' / 'work' = in der Wohn- bzw. Arbeitszone, False = unterwegs, None = unbekannt."""
+        if state is None or state.state in ("unknown", "unavailable"):
+            return None
+        if self._zone_matches(state, self.cfg.get(CONF_ZONE, DEFAULT_ZONE)):
+            return "home"
+        if self._zone_matches(state, self.cfg.get(CONF_WORK_ZONE)):
+            return "work"
+        return False
+
+    def _is_home(self, state: State) -> bool | None:
+        base = self._base(state)
+        return None if base is None else bool(base)
 
     @callback
     def _on_person(self, event: Event[EventStateChangedData]) -> None:
         new = event.data["new_state"]
         if new is None:
             return
-        home = self._is_home(new)
-        if home is None:
+        base = self._base(new)
+        if base is None:
             return
-        if home:
-            self._schedule_arrival(new.last_changed)
+        if base:
+            self._schedule_arrival(new.last_changed, base)
         else:
-            self._on_leave(new.last_changed)
+            self._on_leave(new.last_changed, self._base(event.data.get("old_state")) or None)
 
     def _cancel_arrival(self) -> None:
         if self._arrival_timer:
             self._arrival_timer()
             self._arrival_timer = None
 
-    def _on_leave(self, when: datetime) -> None:
+    def _odometer(self) -> float | None:
+        """Aktueller Kilometerstand (km) aus dem gewählten Sensor, sonst None."""
+        entity = self.cfg.get(CONF_ODOMETER)
+        state = self.hass.states.get(entity) if entity else None
+        if state is None:
+            return None
+        try:
+            value = float(str(state.state).replace(",", "."))
+        except ValueError:
+            return None
+        unit = str((getattr(state, "attributes", None) or {}).get("unit_of_measurement", "")).lower()
+        return value * 1.609344 if unit in ("mi", "mile", "miles") else value
+
+    def _on_leave(self, when: datetime, origin: str | None = None) -> None:
         self._cancel_arrival()                       # kurz weg und wieder da = gleiche Reise
         if not self.data.get("away_since"):
             self.data["away_since"] = dt_util.as_utc(when).isoformat()
+            self.data["away_from"] = origin
+            self.data["odo_start"] = self._odometer()
             self.hass.async_create_task(self._save())
 
-    def _schedule_arrival(self, when: datetime) -> None:
+    def _schedule_arrival(self, when: datetime, at: str | None = None) -> None:
         if not self.data.get("away_since"):
             return
         self._cancel_arrival()
 
         async def _fire(_now: datetime) -> None:
             self._arrival_timer = None
-            await self._finalize(when)
+            await self._finalize(when, at)
 
         self._arrival_timer = async_call_later(self.hass, ARRIVAL_DEBOUNCE_SECONDS, _fire)
 
-    async def _finalize(self, arrival: datetime) -> None:
+    async def _finalize(self, arrival: datetime, at: str | None = None) -> None:
         async with self._lock:
             raw = self.data.get("away_since")
             if not raw:
@@ -266,11 +304,18 @@ class ReisekostenManager:
             start = dt_util.as_local(dt_util.parse_datetime(raw))
             end = dt_util.as_local(arrival)
             self.data["away_since"] = None
+            origin, odo_start = self.data.pop("away_from", None), self.data.pop("odo_start", None)
             rules = self.rules(end.year)
+            if self.cfg.get(CONF_WORK_ZONE) and origin and at and origin != at \
+                    and not qualifies(start, end, rules):
+                _LOGGER.debug("Wohn-Arbeitsstätte %s - %s, keine Dienstreise", start, end)
+                await self._save()
+                return
             if start.date() == end.date():
                 p = await self._merge_same_day(start, end, rules)
             else:
-                p = Pending(id=start.strftime("%Y%m%d%H%M"), start=start, end=end) \
+                p = Pending(id=start.strftime("%Y%m%d%H%M"), start=start, end=end,
+                            activity=self.default_activity()) \
                     if qualifies(start, end, rules) else None
             if p is None:
                 await self._save()
@@ -281,7 +326,15 @@ class ReisekostenManager:
                 _LOGGER.debug("Kein passender Kalendertermin für %s - %s, keine Rückfrage", p.start, p.end)
                 await self._save()
                 return
+            self._remember_km(p, odo_start)
             await self._advance(p)
+
+    def _remember_km(self, p: Pending, odo_start: float | None) -> None:
+        """Kilometer-Vorschlag aus der Differenz des Kilometerzähler-Sensors (Abfahrt bis Ankunft)."""
+        now = self._odometer()
+        if odo_start is None or now is None or now <= odo_start:
+            return
+        self.data.setdefault("suggest", {}).setdefault(p.id, {})["km"] = f"{now - odo_start:.1f}".rstrip("0").rstrip(".")
 
     async def _merge_same_day(self, start: datetime, end: datetime, rules) -> Pending | None:
         """Mehrere Abwesenheiten am selben Kalendertag werden zusammengerechnet."""
@@ -311,7 +364,7 @@ class ReisekostenManager:
         if not qualifies_span(total, rules):
             return None
         first = min(a for a, _ in parsed)
-        return Pending(id=first.strftime("%Y%m%d%H%M"), start=first, end=end,
+        return Pending(id=first.strftime("%Y%m%d%H%M"), start=first, end=end, activity=self.default_activity(),
                        away_minutes=int(total.total_seconds() // 60) if len(parsed) > 1 else None)
 
     # ------------------------------------------------------------------ Rückfragen
@@ -330,6 +383,8 @@ class ReisekostenManager:
         header = f"Unterwegs {p.start:%d.%m. %H:%M} - {p.end:%d.%m. %H:%M} ({hours:.1f} Std.)"
         if p.away_minutes:
             header = f"Mehrere Abwesenheiten am {p.start:%d.%m.} zusammengerechnet: {hours:.1f} Std."
+        if step == "activity":
+            return "Reisekosten: Tätigkeit", f"{header}\nWar das eine selbstständige oder eine angestellte Reise?", False
         if step == "name":
             return "Reisekosten: Reise", f"{header}\nWohin ging die Reise? (z. B. Kunde Musterstadt)", True
         if step == "purpose":
@@ -351,13 +406,18 @@ class ReisekostenManager:
                         "behavior": "textInput", "textInputButtonTitle": "Senden"}]
             suggestion = (self.data.get("suggest") or {}).get(p.id, {}).get(step)
             if suggestion:
-                message += f"\nVorschlag aus dem Kalender: {suggestion}"
+                message += (f"\nVorschlag vom Kilometerzähler: {suggestion} km" if step == "km"
+                            else f"\nVorschlag aus dem Kalender: {suggestion}")
                 actions.append({"action": f"{ACTION_PREFIX}{p.id}|{step}|accept",
                                 "title": f"Übernehmen: {suggestion}"[:40]})
             if step == "name":
                 actions.append({"action": f"{ACTION_PREFIX}{p.id}|{step}|discard", "title": "Keine Dienstreise"})
             elif step in ("km", "meals"):
                 actions.append({"action": f"{ACTION_PREFIX}{p.id}|{step}|none", "title": "Keine"})
+        elif step == "activity":
+            actions = [{"action": f"{ACTION_PREFIX}{p.id}|{step}|self", "title": "Selbstständig"},
+                       {"action": f"{ACTION_PREFIX}{p.id}|{step}|employee", "title": "Angestellt"},
+                       {"action": f"{ACTION_PREFIX}{p.id}|{step}|discard", "title": "Keine Dienstreise"}]
         else:
             actions = [{"action": f"{ACTION_PREFIX}{p.id}|{step}|yes", "title": "Ja"},
                        {"action": f"{ACTION_PREFIX}{p.id}|{step}|no", "title": "Nein"}]

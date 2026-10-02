@@ -10,6 +10,18 @@ CONF_STREET = "street"
 CONF_CITY = "city"
 CONF_CALENDARS = "calendars"
 OPT_CALENDAR_REQUIRED = "calendar_required"   # nur bei passendem Kalendertermin nachfragen
+CONF_EMPLOYMENT = "employment"                # self_employed | employee | both
+CONF_CHART = "chart"                          # skr03 | skr04 | custom
+CONF_WORK_ZONE = "work_zone"                  # Arbeitsstätte (Zone), nur für Angestellte
+CONF_ODOMETER = "odometer"                    # Kilometerzähler-Sensor für den Kilometer-Vorschlag
+EMPLOYMENT_OPTIONS = ("self_employed", "employee", "both")
+CHART_OPTIONS = ("skr03", "skr04", "custom")
+ACTIVITY_SELF, ACTIVITY_EMPLOYEE = "self", "employee"
+# Standardkonten je Kontenrahmen und Tätigkeit: Verpflegungsmehraufwand / Fahrtkosten
+ACCOUNT_TABLE = {
+    "skr03": {ACTIVITY_SELF: ("4674", "4673"), ACTIVITY_EMPLOYEE: ("4664", "4663")},
+    "skr04": {ACTIVITY_SELF: ("6674", "6673"), ACTIVITY_EMPLOYEE: ("6664", "6663")},
+}
 
 # Optionen
 OPT_RULES = "rules"

@@ -17,10 +17,26 @@ Optional wird die PDF zusätzlich in den App-Ordner der Home-Assistant-OneDrive-
 Nur Ordner unterhalb von `www` bekommen einen Link in der Benachrichtigung, sonst wird der Pfad angezeigt.
 
 ## Kalender
-In den Grunddaten können ein oder mehrere Kalender gewählt werden. Nach einer Reise sucht die Integration den Termin mit der größten Überschneidung und schlägt Ziel (Ort, sonst Titel) und Zweck (Titel) vor; auf dem Handy genügt ein Tipp auf „Übernehmen“.
+In den Grunddaten können ein oder mehrere Kalender gewählt werden. Nach einer Reise sucht die Integration die passenden Termine und schlägt Ziel (Ort, bei Adressen mit PLZ nur die Stadt) und Zweck (Titel) vor; mehrere Termine werden nach Beginn zusammengefasst. Auf dem Handy genügt ein Tipp auf „Übernehmen“.
+
+## Selbstständig, angestellt oder beides
+Unter *Grunddaten → Tätigkeit* wählst du **Selbstständig**, **Angestellt** oder **Beides**. Bei „Beides“ fragt die Integration bei jeder Reise zuerst auf dem Handy, ob sie selbstständig oder angestellt war.
+
+**Kontenrahmen** (Buchungsliste auf Seite 2): SKR03, SKR04 oder eigene Konten. Die Konten richten sich nach der Tätigkeit:
+
+| | Selbstständig | Angestellt |
+|---|---|---|
+| SKR03 Verpflegungsmehraufwand / Fahrtkosten | 4674 / 4673 | 4664 / 4663 |
+| SKR04 Verpflegungsmehraufwand / Fahrtkosten | 6674 / 6673 | 6664 / 6663 |
+
+Bei „Eigene Konten“ gelten die Konten aus *Rechtliche Vorgaben und Konten* für alle Reisen. Angestellte brauchen die Buchungsliste meist nicht; „Firma“ ist dann der Arbeitgeber.
+
+**Arbeitsstätte (Zone):** Ist eine Arbeitszone gewählt, werden Wege zwischen Wohnung und Arbeitsstätte nicht als Dienstreise gewertet, auch nicht in der Tagessumme mehrerer Abwesenheiten. Eine Dienstreise beginnt, wenn du die Wohnung oder die Arbeitsstätte verlässt, und endet bei der Rückkehr in eine der beiden Zonen. Reisen, die länger als die Mindestzeit dauern, zählen immer.
+
+**Kilometer-Vorschlag:** Mit einem Kilometerzähler-Sensor (Gesamtkilometerstand, in km oder Meilen) merkt sich die Integration den Stand bei der Abfahrt und bei der Ankunft und schlägt die Differenz bei der Kilometer-Frage vor (nur wenn die Kilometer-Abrechnung aktiv ist). Bei mehreren Abwesenheiten, die zu einer Reise zusammengefasst werden, gilt die zuletzt gemessene Strecke.
 
 ## Einstellungen
-Optionen → *Grunddaten* (Person, Zone, Handy, Name/Firma/Adresse, Kalender, Speicherort, OneDrive) und *Rechtliche Vorgaben und Konten*. Ein Gerätewechsel ist dort ohne Neueinrichtung möglich.
+Optionen → *Grunddaten* (Person, Zone, Tätigkeit, Arbeitsstätte, Kontenrahmen, Kilometerzähler, Handy, Name/Firma/Adresse, Kalender, Speicherort, OneDrive) und *Rechtliche Vorgaben und Konten*. Ein Gerätewechsel ist dort ohne Neueinrichtung möglich.
 
 ## Entitäten fürs Dashboard
 Die Integration legt ein Gerät „Reisekosten“ mit diesen Entitäten an (die IDs hängen von der Sprache ab, hier die deutschen):

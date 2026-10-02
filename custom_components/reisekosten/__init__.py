@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Nicht angegebene Felder bleiben leer und werden per Rückfrage auf dem Handy erfragt.
         p = Pending(
             id=start.strftime("%Y%m%d%H%M"), start=start, end=end,
-            name=d.get("name"), purpose=d.get("purpose"),
+            name=d.get("name"), purpose=d.get("purpose"), activity=manager.default_activity(),
             km_car=(parse_km(str(d["km_car"])) if "km_car" in d else None)
             if manager.rules(start.year).km_enabled else parse_km("0"),
             overnight=d.get("overnight"),

@@ -2,6 +2,17 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.9.0]
+### Neu
+- **Tätigkeit:** In den Grunddaten wählst du Selbstständig, Angestellt oder Beides. Bei „Beides“ fragt die Integration bei jeder Reise auf dem Handy zuerst, welche Tätigkeit es war (Knöpfe „Selbstständig“, „Angestellt“, „Keine Dienstreise“).
+- **Kontenrahmen SKR03/SKR04:** Die Konten der Buchungsliste (Verpflegungsmehraufwand, Fahrtkosten) werden nach Kontenrahmen und Tätigkeit automatisch gesetzt. Wer eigene Konten nutzt, wählt „Eigene Konten“ – bestehende Einstellungen bleiben dabei erhalten.
+- **Arbeitsstätte (Zone):** Wege zwischen Wohnung und Arbeitsstätte gelten nicht als Dienstreise und fließen nicht in die Tagessumme ein. Dienstreisen beginnen und enden an Wohnung oder Arbeitsstätte.
+- **Kilometer-Vorschlag:** Mit einem Kilometerzähler-Sensor schlägt die Integration die gefahrenen Kilometer (Differenz zwischen Abfahrt und Ankunft) bei der Kilometer-Frage vor; ein Tipp übernimmt sie.
+### Hinweise
+- Selbstständige ohne Arbeitszone merken keinen Unterschied: Es gelten die bisherigen Abläufe.
+- Neue Felder in den Grunddaten: Tätigkeit, Arbeitsstätte, Kontenrahmen, Kilometerzähler. Nach dem Update Home Assistant neu starten.
+- Bestehende Installationen behalten ihre eigenen Konten (Kontenrahmen „Eigene Konten“); neu eingerichtet startet die Integration mit SKR04.
+
 ## [0.8.3]
 ### Neu
 - **Knopf „Keine“** bei der Frage nach gestellten Mahlzeiten (und nach Kilometern, falls aktiviert) – kein „-“ mehr eintippen.

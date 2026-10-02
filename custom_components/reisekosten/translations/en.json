@@ -9,10 +9,14 @@
           "zone": "Home / workplace zone",
           "notify_service": "Phone notification (notify.mobile_app_…)",
           "person_name": "Name on statement",
-          "company": "Company",
+          "company": "Company / employer",
           "street": "Street",
           "city": "Postcode, city",
-          "calendars": "Calendars for event suggestions (optional, multiple)"
+          "calendars": "Calendars for event suggestions (optional, multiple)",
+          "employment": "Employment",
+          "work_zone": "Workplace (zone, employees only; commutes are not business trips)",
+          "chart": "Chart of accounts for the booking list",
+          "odometer": "Odometer sensor (optional, for mileage suggestions)"
         }
       }
     }
@@ -33,13 +37,17 @@
           "zone": "Home / business premises (zone)",
           "notify_service": "Phone for the questions (notify.mobile_app_…)",
           "person_name": "Name on the statement",
-          "company": "Company",
+          "company": "Company / employer",
           "street": "Street",
           "city": "Postcode and city",
           "calendars": "Calendars for event suggestions (optional, multiple)",
           "output_dir": "Folder for the PDFs (pick one or type your own path)",
           "upload_onedrive": "Also upload to OneDrive (app folder of the HA OneDrive integration, subfolder “Reisekosten”)",
-          "calendar_required": "Only ask if a calendar event matches the trip (needs calendars)"
+          "calendar_required": "Only ask if a calendar event matches the trip (needs calendars)",
+          "employment": "Employment",
+          "work_zone": "Workplace (zone, employees only; commutes are not business trips)",
+          "chart": "Chart of accounts for the booking list",
+          "odometer": "Odometer sensor (optional, for mileage suggestions)"
         }
       },
       "rules": {
@@ -74,6 +82,20 @@
         "larger_share": "Day with larger share",
         "end_day": "Return day",
         "start_day": "Departure day"
+      }
+    },
+    "employment": {
+      "options": {
+        "self_employed": "Self-employed",
+        "employee": "Employee",
+        "both": "Both (ask on every trip)"
+      }
+    },
+    "chart": {
+      "options": {
+        "skr03": "SKR03",
+        "skr04": "SKR04",
+        "custom": "Own accounts (enter under \"Legal settings\")"
       }
     }
   },

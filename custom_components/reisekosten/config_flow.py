@@ -12,6 +12,7 @@ from homeassistant.helpers import selector
 
 from .const import (
     ACC_CONTRA, ACC_KM, ACC_PAYMENT, ACC_PER_DIEM, CONF_CALENDARS, CONF_CITY, CONF_COMPANY,
+    CHART_OPTIONS, CONF_CHART, CONF_EMPLOYMENT, CONF_ODOMETER, CONF_WORK_ZONE, EMPLOYMENT_OPTIONS,
     CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE, DEFAULT_ZONE, DOMAIN,
     OPT_ACCOUNTS, OPT_CALENDAR_REQUIRED, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE,
 )
@@ -73,6 +74,18 @@ def _general_schema(hass, cur: dict[str, Any], setup: bool = False) -> vol.Schem
             selector.EntitySelectorConfig(domain="person")),
         vol.Required(CONF_ZONE, default=cur.get(CONF_ZONE, DEFAULT_ZONE)): selector.EntitySelector(
             selector.EntitySelectorConfig(domain="zone")),
+        vol.Required(CONF_EMPLOYMENT, default=cur.get(CONF_EMPLOYMENT, "self_employed")):
+            selector.SelectSelector(selector.SelectSelectorConfig(
+                options=list(EMPLOYMENT_OPTIONS), translation_key="employment",
+                mode=selector.SelectSelectorMode.DROPDOWN)),
+        vol.Optional(CONF_WORK_ZONE, description={"suggested_value": cur.get(CONF_WORK_ZONE)}):
+            selector.EntitySelector(selector.EntitySelectorConfig(domain="zone")),
+        vol.Required(CONF_CHART, default=cur.get(CONF_CHART) or ("custom" if cur.get(OPT_ACCOUNTS) else "skr04")):
+            selector.SelectSelector(selector.SelectSelectorConfig(
+                options=list(CHART_OPTIONS), translation_key="chart",
+                mode=selector.SelectSelectorMode.DROPDOWN)),
+        vol.Optional(CONF_ODOMETER, description={"suggested_value": cur.get(CONF_ODOMETER)}):
+            selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
         vol.Required(CONF_NOTIFY, **_d(cur, CONF_NOTIFY)): selector.SelectSelector(
             selector.SelectSelectorConfig(options=notify, custom_value=True,
                                           mode=selector.SelectSelectorMode.DROPDOWN)),
@@ -109,6 +122,8 @@ class ReisekostenOptionsFlow(OptionsFlow):
             out.update(user_input)
             chosen = (user_input.get(OPT_OUTPUT_DIR) or "").strip()
             out[OPT_OUTPUT_DIR] = "" if chosen == default_dir else chosen
+            for key in (CONF_WORK_ZONE, CONF_ODOMETER):          # leeres Feld = Wert entfernen
+                out[key] = user_input.get(key) or None
             out[OPT_UPLOAD_ONEDRIVE] = bool(user_input.get(OPT_UPLOAD_ONEDRIVE, False))
             out[OPT_CALENDAR_REQUIRED] = bool(user_input.get(OPT_CALENDAR_REQUIRED, False))
             return self.async_create_entry(data=out)

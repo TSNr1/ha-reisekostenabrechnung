@@ -133,9 +133,10 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         TIMERS.clear()
 
     def person(self, state, when):
+        old = self.hass._states.get("person.max")
         st = State("person.max", state, when, "Max")
         self.hass._states["person.max"] = st
-        self.m._on_person(Event({"new_state": st}))
+        self.m._on_person(Event({"new_state": st, "old_state": old}))
 
     def last_notify(self):
         return [c for c in self.hass.calls if c[0] == "notify"][-1][2]
@@ -330,6 +331,84 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.last_notify()["data"]["actions"][-1]["action"], f"RK_{pid}|meals|none")
         await self.m._on_action(Event({"action": f"RK_{pid}|meals|none"}))
         self.assertEqual(len(self.m.data["trips"]), 1)
+
+    def cfg(self, **options):
+        self.m.entry = types.SimpleNamespace(data=Entry.data, options=options)
+
+    async def test_both_asks_activity_first_and_uses_chart_accounts(self):
+        self.cfg(employment="both", chart="skr04")
+        await self.go((7, 0), (18, 30))
+        note = self.last_notify()
+        titles = [a["title"] for a in note["data"]["actions"]]
+        self.assertEqual(titles, ["Selbstständig", "Angestellt", "Keine Dienstreise"])
+        pid = next(iter(self.m.data["pending"]))
+        await self.m._on_action(Event({"action": f"RK_{pid}|activity|employee"}))
+        self.assertIn("Wohin ging die Reise", self.last_notify()["message"])
+        p = mgr.Pending.from_dict(self.m.data["pending"][pid])
+        acc = self.m._meta(p, "2026001").accounts
+        self.assertEqual((p.activity, acc.per_diem, acc.km), ("employee", "6664", "6663"))
+        p.activity = "self"
+        self.assertEqual(self.m._meta(p, "1").accounts.per_diem, "6674")
+
+    async def test_single_activity_is_not_asked(self):
+        self.cfg(employment="employee", chart="skr03")
+        await self.go((7, 0), (18, 30))
+        self.assertIn("Wohin ging die Reise", self.last_notify()["message"])
+        self.assertEqual(self.m.default_activity(), "employee")
+        self.cfg()
+        self.assertEqual(self.m.default_activity(), "self")
+
+    async def test_custom_chart_uses_own_accounts(self):
+        self.cfg(chart="custom", accounts={"account_per_diem": "1234", "account_km": "5678"})
+        p = mgr.Pending.from_dict({"id": "x", "start": utc(2, 7).isoformat(), "end": utc(2, 18).isoformat()})
+        acc = self.m._meta(p, "1").accounts
+        self.assertEqual((acc.per_diem, acc.km), ("1234", "5678"))
+
+    async def test_commute_with_work_zone_is_no_trip(self):
+        self.hass._states["zone.work"] = State("zone.work", "0", utc(1, 0), "Arbeit")
+        self.cfg(work_zone="zone.work")
+        self.person("not_home", utc(2, 7, 0))           # Wohnung verlassen
+        self.person("Arbeit", utc(2, 7, 30))            # Wohn-Arbeitsstätte
+        await TIMERS[-1][1](None)
+        TIMERS.clear()
+        self.assertEqual(self.m.data["pending"], {})
+        self.person("not_home", utc(2, 8, 0))           # Außentermin ab Arbeit ...
+        self.person("Arbeit", utc(2, 8, 30))
+        await TIMERS[-1][1](None)
+        TIMERS.clear()
+        self.assertEqual(self.m.data["pending"], {})
+        segments = self.m.data.get("days", {}).get("2026-03-02", [])    # nur der Außentermin zählt, nicht der Arbeitsweg
+        self.assertEqual(len(segments), 1)
+
+    async def test_trip_from_work_to_home_counts(self):
+        self.hass._states["zone.work"] = State("zone.work", "0", utc(1, 0), "Arbeit")
+        self.cfg(work_zone="zone.work")
+        self.person("Arbeit", utc(2, 6, 0))
+        self.person("not_home", utc(2, 8, 0))           # Kunde, mehr als 8 Stunden
+        self.person("home", utc(2, 18, 0))
+        await TIMERS[-1][1](None)
+        TIMERS.clear()
+        self.assertEqual(len(self.m.data["pending"]), 1)
+
+    async def test_odometer_suggestion_and_accept(self):
+        self.cfg(odometer="sensor.km", rules={"km_enabled": True})
+        self.hass._states["sensor.km"] = State("sensor.km", "10000", utc(1, 0), "km")
+        self.person("not_home", utc(2, 7, 0))
+        self.hass._states["sensor.km"] = State("sensor.km", "10123.46", utc(1, 0), "km")
+        self.person("home", utc(2, 18, 30))
+        await TIMERS[-1][1](None)
+        await self.answer("name", "A")
+        await self.answer("purpose", "B")
+        note = self.last_notify()
+        self.assertIn("Vorschlag vom Kilometerzähler: 123.5 km", note["message"])
+        pid = next(iter(self.m.data["pending"]))
+        await self.m._on_action(Event({"action": f"RK_{pid}|km|accept"}))
+        self.assertEqual(self.m.data["pending"][pid]["km_car"], "123.5")
+
+    async def test_odometer_missing_gives_no_suggestion(self):
+        self.cfg(odometer="sensor.km", rules={"km_enabled": True})
+        await self.go((7, 0), (18, 30))
+        self.assertNotIn("Kilometerzähler", self.last_notify()["message"])
 
     async def test_dashboard_correction_fields(self):
         await self.go((7, 0), (18, 30))
