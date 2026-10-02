@@ -6,7 +6,7 @@ from typing import Any, Callable
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -72,7 +72,12 @@ class ReisekostenSensor(SensorEntity):
         self.async_on_remove(self._manager.add_listener(self.async_write_ha_state))
         # Monats- und Jahreswechsel: stündlich neu berechnen
         self.async_on_remove(async_track_time_interval(
-            self.hass, lambda _now: self.async_write_ha_state(), timedelta(hours=1)))
+            self.hass, self._hourly_refresh, timedelta(hours=1)))
+
+    @callback
+    def _hourly_refresh(self, _now: Any) -> None:
+        # @callback: läuft im Event-Loop (sonst Warnung „aus fremdem Thread“)
+        self.async_write_ha_state()
 
     @property
     def native_value(self) -> Any:

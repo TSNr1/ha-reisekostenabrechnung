@@ -2,6 +2,12 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.12.1]
+### Behoben
+- **Warnung im Home-Assistant-Log:** Die stündliche Aktualisierung der Sensoren (für Monats- und Jahreswechsel) lief in einem fremden Thread und löste die Meldung „calls async_write_ha_state from a thread other than the event loop“ aus. Sie läuft jetzt korrekt im Event-Loop. Abrechnungen und Beträge waren davon nicht betroffen.
+### Hinweise
+- Nach dem Update Home Assistant neu starten.
+
 ## [0.12.0]
 ### Verbessert
 - **Rechtliche Vorgaben übersichtlicher:** In den Einstellungen gelten standardmäßig die hinterlegten gesetzlichen Sätze des Reisejahres. Die Eingabefelder für Pauschalen, Kürzungen, km-Sätze und Mitternachtsregel erscheinen erst im nächsten Schritt, wenn du den Schalter **„Eigene Werte statt der gesetzlichen Sätze verwenden“** aktivierst. Konten, Zahlweise und „Kilometer abrechnen“ bleiben direkt im ersten Schritt.
