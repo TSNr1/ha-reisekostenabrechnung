@@ -26,6 +26,9 @@ Optionen → *Grunddaten* (Person, Zone, Handy, Name/Firma/Adresse, Kalender, Sp
 - `reisekosten.add_trip` – Reise manuell anlegen (`start`, `end`; nicht angegebene Felder werden per Handy-Rückfrage erfragt)
 - `reisekosten.answer` – Rückfrage ohne Handy beantworten
 
+## Änderungen
+Siehe [CHANGELOG.md](CHANGELOG.md).
+
 ## Hinweise
 - Keine Steuerberatung. Pauschalen und Konten bitte mit dem Steuerberater abstimmen.
 - Nicht umgesetzt: Dreimonatsfrist, Ausland, Belege/tatsächliche Übernachtungskosten, zweite Zone (Betriebsstätte).
