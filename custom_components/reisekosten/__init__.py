@@ -57,6 +57,11 @@ REGENERATE_SCHEMA = vol.Schema({
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager = ReisekostenManager(hass, entry)
     await manager.async_start()
+    if not hass.data.setdefault(f"{DOMAIN}_view", False):       # nur einmal registrieren
+        from .pdf_view import ReisekostenPdfView
+
+        hass.http.register_view(ReisekostenPdfView(hass))
+        hass.data[f"{DOMAIN}_view"] = True
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = manager
 
     async def add_trip(call: ServiceCall) -> None:

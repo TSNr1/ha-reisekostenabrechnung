@@ -31,7 +31,7 @@ def _storage_locations(hass) -> list[str]:
     """Bekannte Speicherorte: Standard, Medienordner, /share, erlaubte Ordner und deren Unterordner."""
     import os
 
-    roots = [hass.config.path("www", "reisekosten")]
+    roots = [hass.config.path("reisekosten")]
     bases = [*getattr(hass.config, "media_dirs", {}).values(), "/share",
              *getattr(hass.config, "allowlist_external_dirs", [])]
     for base in dict.fromkeys(str(b) for b in bases):
@@ -116,7 +116,7 @@ class ReisekostenOptionsFlow(OptionsFlow):
 
     async def async_step_general(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         cur = self._cur
-        default_dir = self.hass.config.path("www", "reisekosten")
+        default_dir = self.hass.config.path("reisekosten")
         if user_input is not None:
             out = dict(self.config_entry.options)
             out.update(user_input)

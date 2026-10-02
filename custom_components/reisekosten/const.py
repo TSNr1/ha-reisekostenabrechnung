@@ -35,8 +35,8 @@ ACC_CONTRA = "account_contra"
 ACC_PAYMENT = "payment"
 
 DEFAULT_ZONE = "zone.home"
-OUTPUT_SUBDIR = ("www", "reisekosten")        # erreichbar unter /local/reisekosten/
-OUTPUT_URL = "/local/reisekosten"
+OUTPUT_SUBDIR = ("reisekosten",)               # <config>/reisekosten - NICHT unter www (dort wäre es öffentlich)
+PDF_VIEW_URL = "/api/reisekosten/pdf/{number}"  # nur mit Anmeldung bzw. signiertem Link abrufbar
 ARRIVAL_DEBOUNCE_SECONDS = 180                # so lange muss die Person "zuhause" sein
 STORAGE_KEY = f"{DOMAIN}.data"
 STORAGE_VERSION = 1

@@ -28,10 +28,10 @@ Bei manueller Installation müssen Updates selbst eingespielt werden (Ordner ers
 ### Nach der Installation
 Pauschalen, Kürzungen, km-Sätze und Konten unter *Konfigurieren* anpassen (Standard: Deutschland 2026).
 
-PDFs liegen standardmäßig unter `<config>/www/reisekosten/` (abrufbar über `/local/reisekosten/<datei>`).
+PDFs liegen standardmäßig unter `<config>/reisekosten/`. Dieser Ordner ist **nicht öffentlich**: Die PDFs werden nur über Home Assistant ausgeliefert, und zwar mit Anmeldung oder über einen befristeten, signierten Link (Handy-Benachrichtigung 7 Tage, Sensor-Attribut `link` 24 Stunden, wird stündlich erneuert).
 In den Optionen kann ein anderer **Speicherort** gewählt werden (z. B. `/media/reisekosten` oder `/share/Reisekosten`). Der Speicherort ist in den Optionen ein Dropdown (Standard, `/media`, `/share`, deren Unterordner, erlaubte Ordner) – eigene Pfade lassen sich eintippen.
 Optional wird die PDF zusätzlich in den App-Ordner der Home-Assistant-OneDrive-Integration (Unterordner `Reisekosten`) hochgeladen; das nutzt die vorhandene OneDrive-Anmeldung.
-Nur Ordner unterhalb von `www` bekommen einen Link in der Benachrichtigung, sonst wird der Pfad angezeigt.
+Wichtig: Wähle als Speicherort **keinen Ordner unterhalb von `www`** – Dateien dort sind in Home Assistant ohne Anmeldung abrufbar, und die PDFs enthalten Name, Adresse und Reisedaten. Falls das Signieren des Links einmal nicht klappt, zeigt die Benachrichtigung stattdessen den Speicherpfad.
 
 ## Kalender
 In den Grunddaten können ein oder mehrere Kalender gewählt werden. Nach einer Reise sucht die Integration die passenden Termine und schlägt Ziel (Ort, bei Adressen mit PLZ nur die Stadt) und Zweck (Titel) vor; mehrere Termine werden nach Beginn zusammengefasst. Auf dem Handy genügt ein Tipp auf „Übernehmen“.
@@ -81,7 +81,7 @@ entities:
   - sensor.reisekosten_offene_reisen
 ```
 
-Link zur letzten PDF (nur bei Ablage unter `www`):
+Link zur letzten PDF (signiert, 24 Stunden gültig):
 
 ```yaml
 type: markdown

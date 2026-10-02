@@ -18,7 +18,7 @@ from .const import (
     ACC_CONTRA, ACC_KM, ACC_PAYMENT, ACC_PER_DIEM, ACTION_PREFIX, ARRIVAL_DEBOUNCE_SECONDS,
     CONF_CALENDARS, CONF_CITY, CONF_COMPANY, CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE,
     ACCOUNT_TABLE, ACTIVITY_EMPLOYEE, ACTIVITY_SELF, CONF_CHART, CONF_EMPLOYMENT, CONF_ODOMETER,
-    CONF_WORK_ZONE, DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_CALENDAR_REQUIRED, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE, ONEDRIVE_FOLDER, OUTPUT_SUBDIR, OUTPUT_URL, STORAGE_KEY,
+    CONF_WORK_ZONE, DEFAULT_ZONE, DOMAIN, OPT_ACCOUNTS, OPT_CALENDAR_REQUIRED, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE, ONEDRIVE_FOLDER, OUTPUT_SUBDIR, PDF_VIEW_URL, STORAGE_KEY,
     STORAGE_VERSION,
 )
 from .core.calendar_match import pick_event
@@ -193,13 +193,20 @@ class ReisekostenManager:
         step = next_step(Pending.from_dict(self.data["pending"][pid]), self.rules(2026))
         return bool(step) and await self.async_answer(pid, step, text)
 
-    def trip_link(self, trip: dict[str, Any]) -> str | None:
-        """Link zur PDF, wenn sie unterhalb von <config>/www liegt."""
+    def signed_link(self, number: str, hours: int = 24 * 7) -> str | None:
+        """Befristeter, signierter Link zur PDF (öffnet ohne weitere Anmeldung, läuft nach `hours` ab)."""
+        path = PDF_VIEW_URL.format(number=number)
         try:
-            rel = Path(trip.get("path") or "").resolve().relative_to(Path(self.hass.config.path("www")).resolve())
-        except ValueError:
+            from homeassistant.components.http.auth import async_sign_path
+
+            return async_sign_path(self.hass, path, timedelta(hours=hours), use_content_user=True)
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.warning("Link zur PDF konnte nicht signiert werden: %s", err)
             return None
-        return "/local/" + "/".join(rel.parts)
+
+    def trip_link(self, trip: dict[str, Any]) -> str | None:
+        """Signierter Link zur PDF (24 Stunden gültig, der Sensor erneuert ihn stündlich)."""
+        return self.signed_link(trip["number"], hours=24) if trip.get("number") else None
 
     def summary(self) -> dict[str, Any]:
         """Kennzahlen für die Entitäten (Dashboard)."""
@@ -516,18 +523,10 @@ class ReisekostenManager:
         if suggestion:
             self.data.setdefault("suggest", {})[p.id] = suggestion
 
-    def _output(self) -> tuple[Path, str | None]:
-        """Zielordner und (nur unterhalb von <config>/www) die URL, unter der er erreichbar ist."""
+    def _output(self) -> Path:
+        """Zielordner der PDFs (Standard: <config>/reisekosten; absolute Pfade bleiben absolut)."""
         custom = str(self.entry.options.get(OPT_OUTPUT_DIR) or "").strip()
-        folder = Path(self.hass.config.path(*OUTPUT_SUBDIR))
-        if custom:
-            folder = Path(self.hass.config.path(custom))      # absolute Pfade bleiben absolut
-        www = Path(self.hass.config.path("www"))
-        try:
-            rel = folder.resolve().relative_to(www.resolve())
-        except ValueError:
-            return folder, None
-        return folder, "/local/" + "/".join(rel.parts) if rel.parts else "/local"
+        return Path(self.hass.config.path(custom)) if custom else Path(self.hass.config.path(*OUTPUT_SUBDIR))
 
     async def _onedrive(self, filename: str, data: bytes | None = None, delete: bool = False) -> str | None:
         """Datei im App-Ordner der HA-OneDrive-Integration ablegen oder löschen. None = ok, sonst Fehlertext."""
@@ -566,14 +565,13 @@ class ReisekostenManager:
     async def _create_pdf(self, p: Pending, number: str, filename: str):
         """Rechnet, schreibt die PDF und lädt sie ggf. nach OneDrive. -> (statement, path, link, extra)."""
         statement = build_statement(to_trip(p), self._meta(p, number), self.rules(p.end.year))
-        folder, base_url = self._output()
-        path = folder / filename
+        path = self._output() / filename
         await self.hass.async_add_executor_job(_render, statement, path)
         extra = ""
         if self.entry.options.get(OPT_UPLOAD_ONEDRIVE):
             err = await self._upload_onedrive(path)
             extra = (f"\nOneDrive: Apps/…/{ONEDRIVE_FOLDER}" if err is None else f"\n{err}")
-        return statement, path, (f"{base_url}/{filename}" if base_url else None), extra
+        return statement, path, self.signed_link(number), extra
 
     async def _announce(self, p: Pending, number: str, statement, path: Path, link: str | None,
                         extra: str, title: str = "Reisekostenabrechnung") -> None:
@@ -581,7 +579,7 @@ class ReisekostenManager:
         if link:
             await self._notify(f"{title} {number}", f"{p.name}: {total}. Zum Öffnen tippen.{extra}",
                                {"tag": f"rk_{p.id}", "url": link, "clickAction": link})
-        else:   # Ordner außerhalb von www: kein Link möglich
+        else:   # Signatur nicht möglich: Pfad anzeigen
             await self._notify(f"{title} {number}", f"{p.name}: {total}. Gespeichert unter {path}{extra}",
                                {"tag": f"rk_{p.id}"})
 
@@ -595,7 +593,7 @@ class ReisekostenManager:
             self.data["counter"] -= 1
             _LOGGER.exception("PDF konnte nicht erzeugt werden")
             await self._notify("Reisekosten: Fehler",
-                               f"Die PDF konnte nicht nach {self._output()[0]} geschrieben werden. "
+                               f"Die PDF konnte nicht nach {self._output()} geschrieben werden. "
                                "Details stehen im HA-Log.")
             return
         self.data["pending"].pop(p.id, None)
@@ -624,7 +622,7 @@ class ReisekostenManager:
         """Abrechnung löschen (Eintrag, PDF, OneDrive-Kopie); der Zähler wird angepasst."""
         async with self._lock:
             trip = self._find_trip(number)
-            path = Path(trip.get("path") or self._output()[0] / trip["file"])
+            path = Path(trip.get("path") or self._output() / trip["file"])
             self.data["trips"].remove(trip)
             nums = [int(t["number"][4:]) for t in self.data["trips"] if t["number"][4:].isdigit()]
             self.data["counter"] = max(nums, default=0)

@@ -2,6 +2,13 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.10.0]
+### Behoben (Datenschutz)
+- **PDFs sind nicht mehr öffentlich abrufbar.** Bisher lagen sie standardmäßig in `www/reisekosten` und waren damit ohne Anmeldung unter `/local/…` erreichbar. Der neue Standardordner ist `<config>/reisekosten`. Die PDFs werden nur noch über Home Assistant ausgeliefert, mit Anmeldung oder über einen signierten, befristeten Link (Handy-Benachrichtigung 7 Tage, Sensor-Attribut `link` 24 Stunden, stündlich erneuert).
+### Hinweise
+- Neue Abrechnungen landen im neuen Ordner, bestehende PDFs bleiben, wo sie sind, und sind weiter abrufbar. **Lösche alte PDFs unter `www/reisekosten`**, falls vorhanden, und wähle keinen Speicherort unterhalb von `www`.
+- Nach dem Update Home Assistant neu starten. Wer eigene Links auf `/local/reisekosten/…` gebaut hat, nutzt jetzt das Sensor-Attribut `link`.
+
 ## [0.9.0]
 ### Neu
 - **Tätigkeit:** In den Grunddaten wählst du Selbstständig, Angestellt oder Beides. Bei „Beides“ fragt die Integration bei jeder Reise auf dem Handy zuerst, welche Tätigkeit es war (Knöpfe „Selbstständig“, „Angestellt“, „Keine Dienstreise“).

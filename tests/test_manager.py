@@ -66,6 +66,10 @@ def _install_stub():
     mod("homeassistant.config_entries", ConfigEntry=object)
     mod("homeassistant.core", Event=Event, EventStateChangedData=dict, HomeAssistant=object,
         State=State, ServiceCall=object, SupportsResponse=types.SimpleNamespace(ONLY='only'), callback=lambda f: f)
+    mod("homeassistant.components")
+    mod("homeassistant.components.http")
+    mod("homeassistant.components.http.auth",
+        async_sign_path=lambda hass, path, expiration, **kw: f"{path}?authSig=test&h={int(expiration.total_seconds() // 3600)}")
     mod("homeassistant.helpers")
     mod("homeassistant.helpers.event", async_call_later=async_call_later,
         async_track_state_change_event=async_track_state_change_event)
@@ -168,22 +172,21 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.m.data["pending"], {})
         trip = self.m.data["trips"][0]
         self.assertEqual(trip["total"], str(14 + 37.05))
-        pdf = Path(self.tmp, "www", "reisekosten", trip["file"])
+        pdf = Path(self.tmp, "reisekosten", trip["file"])
         self.assertTrue(pdf.exists() and pdf.stat().st_size > 1000)
         done = self.last_notify()
         self.assertIn("51,05 EUR", done["message"])
-        self.assertEqual(done["data"]["url"], f"/local/reisekosten/{trip['file']}")
+        self.assertEqual(done["data"]["url"], f"/api/reisekosten/pdf/{trip['number']}?authSig=test&h=168")
+        self.assertNotIn("/local/", str(done))               # nie über den öffentlichen www-Ordner
 
-    async def test_custom_folder_inside_www_keeps_link(self):
-        self.m.entry = types.SimpleNamespace(data=Entry.data, options={"output_dir": "www/abrechnungen/2026"})
-        folder, url = self.m._output()
-        self.assertEqual(folder, Path(self.tmp, "www", "abrechnungen", "2026"))
-        self.assertEqual(url, "/local/abrechnungen/2026")
+    async def test_default_folder_is_not_public(self):
+        self.assertEqual(self.m._output(), Path(self.tmp, "reisekosten"))
+        self.assertNotIn("www", self.m._output().parts)
 
-    async def test_custom_folder_outside_www_has_no_link(self):
+    async def test_custom_folder_is_used_and_link_is_signed(self):
         target = tempfile.mkdtemp()
         self.m.entry = types.SimpleNamespace(data=Entry.data, options={"output_dir": target})
-        self.assertEqual(self.m._output(), (Path(target), None))
+        self.assertEqual(self.m._output(), Path(target))
         self.person("not_home", utc(2, 7, 0))
         self.person("home", utc(2, 18, 30))
         await TIMERS[0][1](None)
@@ -191,9 +194,17 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
             await self.answer(step, text)
         trip = self.m.data["trips"][0]
         self.assertTrue(Path(target, trip["file"]).exists())
-        note = self.last_notify()
-        self.assertIn(target, note["message"])
-        self.assertNotIn("url", note["data"])
+        self.assertIn("authSig", self.last_notify()["data"]["url"])
+
+    async def test_link_falls_back_to_path_when_signing_fails(self):
+        def broken(*a, **k):
+            raise RuntimeError("keine Signatur")
+        sys.modules["homeassistant.components.http.auth"].async_sign_path, saved = broken, \
+            sys.modules["homeassistant.components.http.auth"].async_sign_path
+        try:
+            self.assertIsNone(self.m.signed_link("2026001"))
+        finally:
+            sys.modules["homeassistant.components.http.auth"].async_sign_path = saved
 
     async def test_onedrive_failure_is_reported_but_pdf_is_kept(self):
         self.m.entry = types.SimpleNamespace(data=Entry.data, options={"upload_onedrive": True})
@@ -203,7 +214,7 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         for step, text in (("name", "A"), ("purpose", "B"), ("km", "-"), ("meals", "-")):
             await self.answer(step, text)
         trip = self.m.data["trips"][0]
-        self.assertTrue(Path(self.tmp, "www", "reisekosten", trip["file"]).exists())
+        self.assertTrue(Path(self.tmp, "reisekosten", trip["file"]).exists())
         self.assertIn("OneDrive", self.last_notify()["message"])
 
     async def test_calendar_suggestion_can_be_accepted(self):
@@ -455,7 +466,7 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((float(s["month_total"]), float(s["year_total"]), s["year_count"], s["open"]),
                          (17.0, 17.0, 1, []))
         self.assertEqual(s["last"]["number"], "2026001")
-        self.assertTrue(self.m.trip_link(s["last"]).startswith("/local/reisekosten/"))
+        self.assertEqual(self.m.trip_link(s["last"]), f"/api/reisekosten/pdf/{s['last']['number']}?authSig=test&h=24")
         remove()
         n = len(calls)
         await self.m._save()
