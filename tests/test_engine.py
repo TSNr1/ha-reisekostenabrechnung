@@ -19,7 +19,7 @@ def dt(y, mo, d, h, mi):
     return datetime(y, mo, d, h, mi, tzinfo=TZ)
 
 
-class SampleFromOnexma(unittest.TestCase):
+class SampleStatement(unittest.TestCase):
     """Abrechnung Nr. 1000001: 07.01.2026 07:55 - 17.01.2026 13:42, Ergebnis 280,00 EUR."""
 
     def setUp(self):
