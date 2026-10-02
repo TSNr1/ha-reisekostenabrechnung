@@ -1,6 +1,9 @@
 {
   "domain": "reisekosten",
   "name": "Reisekosten",
+  "after_dependencies": [
+    "mobile_app"
+  ],
   "codeowners": [
     "@TSNr1"
   ],
@@ -9,9 +12,6 @@
     "http",
     "person",
     "zone"
-  ],
-  "after_dependencies": [
-    "mobile_app"
   ],
   "documentation": "https://github.com/TSNr1/ha-reisekostenabrechnung",
   "integration_type": "service",
