@@ -207,6 +207,27 @@
       "away": {
         "name": "Away"
       }
+    },
+    "select": {
+      "trip": "Statement"
+    },
+    "text": {
+      "field_name": "Trip",
+      "field_purpose": "Purpose",
+      "field_meals": "Meals provided",
+      "answer": "Answer to open question"
+    },
+    "number": {
+      "field_km": "Kilometres"
+    },
+    "switch": {
+      "field_overnight": "Overnight stay"
+    },
+    "button": {
+      "btn_apply": "Regenerate statement",
+      "btn_delete": "Delete statement",
+      "btn_discard_open": "Discard open trip",
+      "btn_resend": "Resend open question"
     }
   }
 }

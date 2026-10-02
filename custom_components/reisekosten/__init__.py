@@ -16,7 +16,7 @@ from .manager import ReisekostenManager
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor", "binary_sensor"]
+PLATFORMS = ["sensor", "binary_sensor", "select", "text", "number", "switch", "button"]
 SERVICE_ADD_TRIP = "add_trip"
 SERVICE_ANSWER = "answer"
 SERVICE_DISCARD = "discard"

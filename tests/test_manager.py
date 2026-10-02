@@ -320,6 +320,34 @@ class ManagerFlow(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(ValueError):
             await self.m.async_regenerate(trip["number"], {})
 
+    async def test_dashboard_correction_fields(self):
+        await self.go((7, 0), (18, 30))
+        await self.finish("100")
+        number = self.m.data["trips"][0]["number"]
+        self.assertEqual((self.m.ui["selected"], self.m.ui["name"], self.m.ui["purpose"], self.m.ui["km"]),
+                         (number, "A", "B", 100.0))
+        self.m.ui_set("km", 0.0)
+        self.m.ui_set("purpose", "Neu")
+        await self.m.async_apply_ui()
+        trip = self.m.data["trips"][0]
+        self.assertEqual((float(trip["total"]), trip["purpose"]), (14.0, "Neu"))
+        await self.m.async_delete_selected()
+        self.assertEqual((self.m.data["trips"], self.m.ui["selected"]), ([], None))
+        with self.assertRaises(ValueError):
+            await self.m.async_apply_ui()
+
+    async def test_dashboard_answer_and_resend(self):
+        await self.go((7, 0), (18, 30))
+        self.assertFalse(await self.m.async_answer_open("  "))
+        before = len(self.notes())
+        await self.m.async_resend()
+        self.assertEqual(len(self.notes()), before + 1)
+        self.assertTrue(await self.m.async_answer_open("Bensheim"))
+        raw = next(iter(self.m.data["pending"].values()))
+        self.assertEqual(raw["name"], "Bensheim")
+        await self.m.async_discard_open()
+        self.assertEqual(self.m.data["pending"], {})
+
     async def test_summary_for_dashboard_entities(self):
         calls = []
         remove = self.m.add_listener(lambda: calls.append(1))

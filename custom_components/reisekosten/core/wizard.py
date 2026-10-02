@@ -113,6 +113,16 @@ def parse_km(text: str) -> Decimal:
 _MEAL_RE = re.compile(r"^(\d{1,2})\.(\d{1,2})(?:\.(\d{2,4}))?\s*([FMA]*)$", re.I)
 
 
+def meals_to_text(meals: dict[date, set[str]] | None) -> str:
+    """Umkehrung von parse_meals: {8.1.: {Frühstück, Abend}} -> '08.01 FA'."""
+    parts = []
+    for d in sorted(meals or {}):
+        letters = "".join(c for c, name in MEAL_LETTERS.items() if name in meals[d])
+        if letters:
+            parts.append(f"{d:%d.%m}" + ("" if len(letters) == 3 else f" {letters}"))
+    return ", ".join(parts)
+
+
 def parse_meals(text: str, start: datetime, end: datetime) -> dict[date, set[str]]:
     """'08.01 FA, 09.01 M' -> {8.1.: {Frühstück, Abend}, 9.1.: {Mittag}}.
     F = Frühstück, M = Mittag, A = Abend. Ohne Buchstaben: alle drei Mahlzeiten."""

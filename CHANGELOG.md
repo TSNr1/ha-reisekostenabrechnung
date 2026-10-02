@@ -2,6 +2,14 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.8.0]
+### Neu
+- **Korrekturkarte fürs Dashboard:** Neue Eingabe-Entitäten, mit denen Abrechnungen direkt am Dashboard korrigiert werden können: Auswahl der Abrechnung, Felder für Reise, Zweck, Mahlzeiten, Kilometer und Übernachtung, dazu Knöpfe „Abrechnung neu erzeugen“ und „Abrechnung löschen“.
+- **Offene Fragen am Dashboard:** Feld „Antwort auf offene Frage“, Knöpfe „Offene Reise verwerfen“ und „Offene Frage erneut senden“.
+- Fertige Beispielkarte im README.
+### Hinweise
+- Nach dem Update Home Assistant neu starten, damit die neuen Entitäten angelegt werden. Abrechnungen vor 0.6.0 lassen sich weiterhin nicht neu erzeugen.
+
 ## [0.7.0]
 ### Neu
 - **Entitäten fürs Dashboard:** Neues Gerät „Reisekosten“ mit „Unterwegs“ (an/aus), „Letzte Abrechnung“ (mit Betrag, Zeitraum und Link zur PDF), „Summe Monat“, „Summe Jahr“, „Reisen dieses Jahr“ und „Offene Reisen“. Beispielkarten stehen im README.

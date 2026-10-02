@@ -56,6 +56,36 @@ content: >
   [Letzte Abrechnung öffnen]({{ state_attr('sensor.reisekosten_letzte_abrechnung', 'link') }})
 ```
 
+### Korrekturkarte
+Zum Korrigieren gibt es zusätzlich Eingabe-Entitäten: `select.reisekosten_abrechnung` (Auswahl, neueste zuerst), `text.reisekosten_reise`, `text.reisekosten_zweck`, `text.reisekosten_gestellte_mahlzeiten`, `number.reisekosten_kilometer`, `switch.reisekosten_ubernachtung` sowie die Knöpfe „Abrechnung neu erzeugen“, „Abrechnung löschen“, „Offene Reise verwerfen“ und „Offene Frage erneut senden“. Mit `text.reisekosten_antwort_auf_offene_frage` lässt sich die Handy-Frage auch am Dashboard beantworten. Beim Auswählen werden die Felder mit den Werten der Abrechnung gefüllt; geändert wird erst nach „Abrechnung neu erzeugen“. (Abrechnungen vor 0.6.0 lassen sich nicht neu erzeugen.)
+
+```yaml
+type: entities
+title: Abrechnung korrigieren
+entities:
+  - select.reisekosten_abrechnung
+  - text.reisekosten_reise
+  - text.reisekosten_zweck
+  - text.reisekosten_gestellte_mahlzeiten
+  - number.reisekosten_kilometer
+  - switch.reisekosten_ubernachtung
+  - entity: button.reisekosten_abrechnung_neu_erzeugen
+    tap_action:
+      action: toggle
+  - entity: button.reisekosten_abrechnung_loschen
+    tap_action:
+      action: toggle
+      confirmation:
+        text: Abrechnung wirklich löschen?
+  - type: section
+    label: Offene Reise
+  - text.reisekosten_antwort_auf_offene_frage
+  - button.reisekosten_offene_reise_verwerfen
+  - button.reisekosten_offene_frage_erneut_senden
+```
+
+(Die Kilometer-Zeile ist nur sinnvoll, wenn die Kilometer-Abrechnung eingeschaltet ist.)
+
 ## Dienste
 - `reisekosten.add_trip` – Reise manuell anlegen (`start`, `end`; nicht angegebene Felder werden per Handy-Rückfrage erfragt)
 - `reisekosten.answer` – Rückfrage ohne Handy beantworten

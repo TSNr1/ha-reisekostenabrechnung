@@ -207,6 +207,27 @@
       "away": {
         "name": "Unterwegs"
       }
+    },
+    "select": {
+      "trip": "Abrechnung"
+    },
+    "text": {
+      "field_name": "Reise",
+      "field_purpose": "Zweck",
+      "field_meals": "Gestellte Mahlzeiten",
+      "answer": "Antwort auf offene Frage"
+    },
+    "number": {
+      "field_km": "Kilometer"
+    },
+    "switch": {
+      "field_overnight": "Übernachtung"
+    },
+    "button": {
+      "btn_apply": "Abrechnung neu erzeugen",
+      "btn_delete": "Abrechnung löschen",
+      "btn_discard_open": "Offene Reise verwerfen",
+      "btn_resend": "Offene Frage erneut senden"
     }
   }
 }

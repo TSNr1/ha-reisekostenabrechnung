@@ -24,7 +24,8 @@ from .core.calendar_match import pick_event
 from .core.engine import Accounts, Meta, build_statement, fmt_money
 from .core.rules import rules_for
 from .core.wizard import (
-    Pending, apply_answer, next_step, parse_km, parse_meals, qualifies, qualifies_span, to_trip,
+    Pending, apply_answer, meals_to_text, next_step, parse_km, parse_meals, qualifies, qualifies_span,
+    to_trip,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +46,9 @@ class ReisekostenManager:
         self.data: dict[str, Any] = {"counter": 0, "away_since": None, "pending": {}, "trips": []}
         self._unsubs: list = []
         self._listeners: list = []
+        # Eingabepuffer für die Korrektur-Entitäten im Dashboard
+        self.ui: dict[str, Any] = {"selected": None, "name": "", "purpose": "", "km": 0.0,
+                                   "overnight": False, "meals": ""}
         self._arrival_timer = None
         self._lock = asyncio.Lock()
 
@@ -79,6 +83,7 @@ class ReisekostenManager:
         stored = await self._store.async_load()
         if stored:
             self.data.update(stored)
+        self._ui_sync()
         person = self.cfg[CONF_PERSON]
         self._unsubs.append(async_track_state_change_event(self.hass, [person], self._on_person))
         self._unsubs.append(self.hass.bus.async_listen("mobile_app_notification_action", self._on_action))
@@ -101,6 +106,10 @@ class ReisekostenManager:
 
     async def _save(self) -> None:
         await self._store.async_save(self.data)
+        self._ui_sync()
+        self._notify_listeners()
+
+    def _notify_listeners(self) -> None:
         for callback_ in list(self._listeners):
             callback_()
 
@@ -108,6 +117,71 @@ class ReisekostenManager:
         """Für Entitäten: wird bei jeder Änderung der Daten aufgerufen. Gibt eine Abmelde-Funktion zurück."""
         self._listeners.append(callback_)
         return lambda: self._listeners.remove(callback_) if callback_ in self._listeners else None
+
+    # ------------------------------------------------------------------ Dashboard: Korrekturfelder
+    def ui_numbers(self) -> list[str]:
+        return [t["number"] for t in reversed(self.data["trips"])]
+
+    def _ui_sync(self) -> None:
+        """Hält die Auswahl gültig; bei Wechsel werden die Felder mit den Werten der Abrechnung gefüllt."""
+        numbers = self.ui_numbers()
+        if self.ui["selected"] not in numbers:
+            self.ui["selected"] = numbers[0] if numbers else None
+            self._ui_load()
+
+    def _ui_load(self) -> None:
+        trip = next((t for t in self.data["trips"] if t["number"] == self.ui["selected"]), None)
+        snap = (trip or {}).get("data")
+        if not trip:
+            self.ui.update(name="", purpose="", km=0.0, overnight=False, meals="")
+        elif not snap:
+            self.ui.update(name=trip.get("name") or "", purpose=trip.get("purpose") or "", km=0.0,
+                           overnight=False, meals="")
+        else:
+            p = Pending.from_dict(snap)
+            self.ui.update(name=p.name or "", purpose=p.purpose or "", km=float(p.km_car or 0),
+                           overnight=bool(p.overnight), meals=meals_to_text(p.meals))
+
+    def ui_select(self, number: str) -> None:
+        self.ui["selected"] = number
+        self._ui_load()
+        self._notify_listeners()
+
+    def ui_set(self, field: str, value: Any) -> None:
+        self.ui[field] = value
+        self._notify_listeners()
+
+    async def async_apply_ui(self) -> None:
+        """Korrekturfelder auf die gewählte Abrechnung anwenden (PDF neu erzeugen)."""
+        if not self.ui["selected"]:
+            raise ValueError("Keine Abrechnung ausgewählt")
+        await self.async_regenerate(self.ui["selected"], {
+            "name": self.ui["name"], "purpose": self.ui["purpose"], "km_car": self.ui["km"],
+            "overnight": self.ui["overnight"], "meals": self.ui["meals"] or "-"})
+
+    async def async_delete_selected(self) -> None:
+        if not self.ui["selected"]:
+            raise ValueError("Keine Abrechnung ausgewählt")
+        await self.async_delete_trip(self.ui["selected"])
+
+    async def async_resend(self) -> None:
+        """Offene Fragen erneut aufs Handy schicken."""
+        async with self._lock:
+            for raw in list(self.data["pending"].values()):
+                await self._advance(Pending.from_dict(raw))
+
+    async def async_discard_open(self) -> None:
+        """Älteste offene Reise verwerfen (Knopf im Dashboard)."""
+        if self.data["pending"]:
+            await self.async_discard(next(iter(self.data["pending"])))
+
+    async def async_answer_open(self, text: str) -> bool:
+        """Antwort aus dem Dashboard auf die aktuell offene Frage der ältesten offenen Reise."""
+        if not self.data["pending"] or not text.strip():
+            return False
+        pid = next(iter(self.data["pending"]))
+        step = next_step(Pending.from_dict(self.data["pending"][pid]), self.rules(2026))
+        return bool(step) and await self.async_answer(pid, step, text)
 
     def trip_link(self, trip: dict[str, Any]) -> str | None:
         """Link zur PDF, wenn sie unterhalb von <config>/www liegt."""
@@ -511,7 +585,7 @@ class ReisekostenManager:
                 p.name = changes["name"]
             if changes.get("purpose"):
                 p.purpose = changes["purpose"]
-            if "km_car" in changes:
+            if "km_car" in changes and self.rules(p.end.year).km_enabled:
                 p.km_car = parse_km(str(changes["km_car"]))
             if "overnight" in changes:
                 p.overnight = bool(changes["overnight"])
