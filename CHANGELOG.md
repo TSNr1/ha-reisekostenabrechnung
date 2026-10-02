@@ -2,6 +2,15 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.11.0]
+### Neu
+- **Sätze pro Jahr.** Die Inlandspauschalen und alle übrigen Regeln sind jetzt je Jahr hinterlegt. Eine Reise wird mit den Sätzen ihres Reisejahres berechnet, auch wenn sie erst im Folgejahr abgerechnet wird. Ändert der Gesetzgeber die Sätze, kommt mit einem Update ein Eintrag für das neue Jahr dazu; frühere Abrechnungen bleiben unverändert. Ein Jahr ohne eigenen Eintrag nutzt die Sätze des Vorjahres.
+### Verbessert
+- In den Einstellungen werden nur noch deine **eigenen Abweichungen** gespeichert. Bisher wurde bei jedem Speichern eine Kopie aller Werte abgelegt, die künftige Sätze überschrieben hätte. Alte Kopien werden automatisch wie Standardwerte behandelt.
+### Hinweise
+- Für 2024 bis 2026 gelten unverändert 14 € / 28 € / 14 €. Die Auslandspauschalen sind weiterhin nicht enthalten.
+- Wer in den Einstellungen bewusst andere Werte eingetragen hat, behält sie für alle Jahre. Nach dem Update Home Assistant neu starten.
+
 ## [0.10.1]
 ### Behoben
 - **Tippen auf die Benachrichtigung „Abrechnung erstellt“ öffnete in der Android-App nur „401: Unauthorized“.** Die App hängt an relative Links eigene Parameter an, wodurch der signierte Link ungültig wurde. Der Link in der Benachrichtigung ist jetzt eine vollständige Adresse (externe URL bevorzugt, sonst interne) und öffnet das PDF im Browser.

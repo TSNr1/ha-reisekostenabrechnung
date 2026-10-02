@@ -14,7 +14,7 @@ fragt sie auf dem Handy nach Reiseziel, Zweck, Kilometern (und ggf. Übernachtun
 **Kann:** Reisen automatisch erkennen, per Handy nachfragen (Ziel, Zweck, Kilometer, Übernachtung, Mahlzeiten), Termine aus Kalendern vorschlagen, Verpflegungspauschalen nach deutschem Reisekostenrecht berechnen, PDF mit Buchungsliste erzeugen, optional nach OneDrive kopieren, Abrechnungen am Dashboard korrigieren.
 
 **Grenzen (Stand jetzt):**
-- Nur **Deutschland** und die Sätze von **2026** (Inlandspauschalen 14 € / 28 € / 14 €), keine Auslandspauschalen.
+- Nur **Deutschland** (Inlandspauschalen 14 € / 28 € / 14 €, Stand 2026), keine Auslandspauschalen. Die Sätze sind **pro Jahr** hinterlegt: Reisen werden mit den Sätzen ihres Jahres berechnet, ändert der Gesetzgeber sie, kommt mit einem Update ein Eintrag für das neue Jahr dazu.
 - Keine **Dreimonatsfrist** bei längerer Tätigkeit am selben Ort, keine steuerliche Prüfung der „ersten Tätigkeitsstätte“.
 - **Übernachtungs- und Hotelkosten mit Beleg** werden nicht berechnet, nur Verpflegung und Kilometer.
 - Eine Person und eine Heimzone (optional eine Arbeitszone) je Einrichtung.
@@ -44,7 +44,7 @@ Bei manueller Installation müssen Updates selbst eingespielt werden (Ordner ers
 Beim ersten Start installiert Home Assistant die Bibliothek `reportlab`. Das braucht Internet und klappt auf den gängigen Systemen (Home Assistant OS, Container) problemlos. Falls die Integration nicht startet, steht der Grund unter Einstellungen → System → Protokolle.
 
 ### Nach der Installation
-Pauschalen, Kürzungen, km-Sätze und Konten unter *Konfigurieren* anpassen (Standard: Deutschland 2026).
+Pauschalen, Kürzungen, km-Sätze und Konten unter *Konfigurieren* anpassen (Standard: Deutschland, Sätze des Reisejahres; in den Einstellungen nur ändern, wenn du bewusst abweichen willst – eigene Werte gelten für alle Jahre).
 
 PDFs liegen standardmäßig unter `<config>/reisekosten/`. Dieser Ordner ist **nicht öffentlich**: Die PDFs werden nur über Home Assistant ausgeliefert, und zwar mit Anmeldung oder über einen befristeten, signierten Link (Handy-Benachrichtigung 7 Tage, Sensor-Attribut `link` 24 Stunden, wird stündlich erneuert).
 In den Optionen kann ein anderer **Speicherort** gewählt werden (z. B. `/media/reisekosten` oder `/share/Reisekosten`). Der Speicherort ist in den Optionen ein Dropdown (Standard, `/media`, `/share`, deren Unterordner, erlaubte Ordner) – eigene Pfade lassen sich eintippen.

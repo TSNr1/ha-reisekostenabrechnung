@@ -16,7 +16,7 @@ from .const import (
     CONF_NAME, CONF_NOTIFY, CONF_PERSON, CONF_STREET, CONF_ZONE, DEFAULT_ZONE, DOMAIN,
     OPT_ACCOUNTS, OPT_CALENDAR_REQUIRED, OPT_OUTPUT_DIR, OPT_RULES, OPT_UPLOAD_ONEDRIVE,
 )
-from .core.rules import MIDNIGHT_RULES, Rules, rules_for
+from .core.rules import MIDNIGHT_RULES, Rules, diff_overrides, rules_for
 
 MONEY_FIELDS = ("p8", "p24", "arrival_departure", "cut_breakfast", "cut_lunch", "cut_dinner",
                 "km_car", "km_motorcycle", "km_scooter", "lodging_flat", "min_hours")
@@ -154,7 +154,7 @@ class ReisekostenOptionsFlow(OptionsFlow):
                 new_rules[key] = str(Decimal(str(value))) if key in MONEY_FIELDS else value
             Rules.from_dict(new_rules)                      # validiert
             out = dict(current)
-            out[OPT_RULES] = new_rules
+            out[OPT_RULES] = diff_overrides(new_rules)      # nur eigene Abweichungen speichern
             out[OPT_ACCOUNTS] = {
                 ACC_PER_DIEM: user_input[ACC_PER_DIEM], ACC_KM: user_input[ACC_KM],
                 ACC_CONTRA: user_input[ACC_CONTRA], ACC_PAYMENT: user_input[ACC_PAYMENT],

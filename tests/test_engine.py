@@ -125,6 +125,34 @@ class RulesConfig(unittest.TestCase):
         self.assertEqual(rules_for(2030).p24, D("28"))
 
 
+class RulesByYear(unittest.TestCase):
+    def setUp(self):
+        import core.rules as cr
+        self.cr = cr
+        self.saved = dict(cr.RULES_BY_YEAR)
+        cr.RULES_BY_YEAR[2028] = Rules(p8=D("15"), p24=D("30"), arrival_departure=D("15"))
+
+    def tearDown(self):
+        self.cr.RULES_BY_YEAR.clear()
+        self.cr.RULES_BY_YEAR.update(self.saved)
+
+    def test_each_year_uses_its_own_rates(self):
+        self.assertEqual(rules_for(2027).p8, D("14"))      # Jahr ohne Eintrag: Vorjahr
+        self.assertEqual(rules_for(2028).p8, D("15"))
+        self.assertEqual(rules_for(2029).p24, D("30"))
+        self.assertEqual(rules_for(2026).p24, D("28"))      # frühere Reisen bleiben unverändert
+
+    def test_old_full_copy_in_options_does_not_freeze_rates(self):
+        old_copy = Rules().to_dict()                       # alte Einstellungen: alle Werte gespeichert
+        old_copy["km_enabled"] = False                     # eigene Abweichung bleibt erhalten
+        r = rules_for(2028, old_copy)
+        self.assertEqual(r.p8, D("15"))
+        self.assertFalse(r.km_enabled)
+
+    def test_personal_override_still_wins(self):
+        self.assertEqual(rules_for(2028, {"p8": "16"}).p8, D("16"))
+
+
 class AwaySum(unittest.TestCase):
     def test_away_duration_replaces_span_for_single_day(self):
         from datetime import timedelta

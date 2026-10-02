@@ -72,14 +72,50 @@ class Rules:
         return out
 
 
-# Sätze je Jahr. Für die Inlandspauschalen waren 2024-2026 unverändert.
-RULES_BY_YEAR: dict[int, Rules] = {y: Rules() for y in (2024, 2025, 2026)}
+# Sätze je Jahr (Inland). Pro Jahr eine eigene Zeile: ändert der Gesetzgeber die Sätze,
+# kommt für das neue Jahr ein Eintrag mit den geänderten Werten dazu, z. B.
+#   2028: Rules(p8=D("15"), p24=D("30"), arrival_departure=D("15")),
+# Reisen früherer Jahre werden weiter mit den damaligen Sätzen berechnet. Ein Jahr ohne
+# eigenen Eintrag nutzt den Eintrag des nächstkleineren Jahres.
+# Quelle: § 9 Abs. 4a EStG. Inland 14 € / 28 € seit 2020 unverändert (Stand 2026).
+RULES_BY_YEAR: dict[int, Rules] = {
+    2024: Rules(),
+    2025: Rules(),
+    2026: Rules(),
+}
+
+
+def base_rules(year: int) -> Rules:
+    """Gesetzliche Standardsätze für das Jahr (ohne persönliche Anpassungen)."""
+    known = sorted(RULES_BY_YEAR)
+    return RULES_BY_YEAR[max([y for y in known if y <= year] or [known[0]])]
+
+
+def diff_overrides(overrides: dict | None) -> dict:
+    """Nur die Werte, die von den Standardsätzen abweichen.
+
+    Ältere Einstellungen speichern alle Werte als Kopie der damaligen Sätze; würden sie das
+    Jahr überschreiben, blieben die Sätze für immer auf dem Stand von damals stehen. Ein Wert,
+    der in irgendeinem Jahr der Tabelle ein Standardwert ist, gilt deshalb nicht als eigene Änderung.
+    """
+    if not overrides:
+        return {}
+    out = {}
+    for key, value in overrides.items():
+        try:
+            parsed = Rules.from_dict({key: value}).__dict__[key]
+            is_default = any(getattr(r, key) == parsed for r in RULES_BY_YEAR.values())
+        except (ValueError, KeyError, ArithmeticError):
+            is_default = False
+        if not is_default:
+            out[key] = value
+    return out
 
 
 def rules_for(year: int, overrides: dict | None = None) -> Rules:
-    """Regeln für ein Jahr; fehlt es, gilt das nächstkleinere bekannte Jahr."""
-    known = sorted(RULES_BY_YEAR)
-    base = RULES_BY_YEAR[max([y for y in known if y <= year] or [known[0]])]
-    if overrides:
-        return Rules.from_dict({**base.to_dict(), **overrides})
+    """Regeln für ein Jahr: Jahrestabelle plus persönliche Abweichungen."""
+    base = base_rules(year)
+    diff = diff_overrides(overrides)
+    if diff:
+        return Rules.from_dict({**base.to_dict(), **diff})
     return base
