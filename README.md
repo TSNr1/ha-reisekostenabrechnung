@@ -2,7 +2,7 @@
 
 # Reisekosten für Home Assistant
 
-> **Beta:** Die Integration ist neu und bisher nur von wenigen Personen im Alltag getestet. Kalender, Arbeitsstätte, Kilometerzähler und die Tätigkeitsfrage sind noch nicht in vielen echten Reisen erprobt. Bitte Abrechnungen prüfen und Fehler gern melden. [English summary below](#english-summary)
+> **Beta:** Die Integration ist neu und bisher nur von wenigen Personen im Alltag getestet. **Benachrichtigungen und Eingabe (Rückfragen, Antwortfeld, Buttons) sind bisher nur mit der Android-Companion-App getestet**; ob es auf dem iPhone genauso funktioniert, ist ungeprüft – Rückmeldungen dazu sind willkommen. Kalender, Arbeitsstätte, Kilometerzähler und die Tätigkeitsfrage sind noch nicht in vielen echten Reisen erprobt. Bitte Abrechnungen prüfen und Fehler gern melden. [English summary below](#english-summary)
 
 Erstellt automatisch eine Reisekostenabrechnung (PDF) für jede Reise: Die Integration beobachtet eine `person`-Entität.
 Verlässt sie die Heimzone, ist länger als die Mindestzeit (Standard: mehr als 8 Stunden) unterwegs und kommt zurück,
