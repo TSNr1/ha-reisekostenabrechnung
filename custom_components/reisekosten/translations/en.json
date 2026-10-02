@@ -52,13 +52,25 @@
       },
       "rules": {
         "title": "Legal rules",
+        "description": "The statutory domestic rates of the trip year apply automatically. Enable “Custom values” only if you want to deviate on purpose; you can change the rates in the next step. Custom values apply to all years.",
+        "data": {
+          "custom_rules": "Use custom values instead of the statutory rates",
+          "km_enabled": "Bill mileage (off if the vehicle is a business vehicle)",
+          "account_per_diem": "Account per diem",
+          "account_km": "Account mileage",
+          "account_contra": "Counter account",
+          "payment": "Payment method"
+        }
+      },
+      "rules_custom": {
+        "title": "Custom values",
+        "description": "These values replace the statutory rates for all trip years. To go back to the statutory rates, switch off “Custom values” in the previous step.",
         "data": {
           "country": "Country (display)",
           "p8": "Allowance over 8 hours (EUR)",
           "p24": "Allowance full day, 24 hours (EUR)",
           "arrival_departure": "Allowance arrival/departure day (EUR)",
           "min_hours": "Minimum absence (hours)",
-          "km_enabled": "Bill mileage (off if the vehicle is a business vehicle)",
           "strictly_more_than": "Only for MORE than the minimum (off = from the minimum)",
           "cut_breakfast": "Deduction breakfast (share of 24 h rate)",
           "cut_lunch": "Deduction lunch (share)",
@@ -67,11 +79,7 @@
           "km_motorcycle": "Mileage rate motorcycle (EUR/km)",
           "km_scooter": "Mileage rate scooter (EUR/km)",
           "lodging_flat": "Lodging flat rate (EUR)",
-          "midnight_rule": "Trip past midnight without overnight stay: assign to",
-          "account_per_diem": "Account per diem",
-          "account_km": "Account mileage",
-          "account_contra": "Counter account",
-          "payment": "Payment method"
+          "midnight_rule": "Trip past midnight without overnight stay: assign to"
         }
       }
     }

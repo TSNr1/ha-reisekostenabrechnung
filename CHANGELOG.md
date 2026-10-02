@@ -2,6 +2,12 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.12.0]
+### Verbessert
+- **Rechtliche Vorgaben übersichtlicher:** In den Einstellungen gelten standardmäßig die hinterlegten gesetzlichen Sätze des Reisejahres. Die Eingabefelder für Pauschalen, Kürzungen, km-Sätze und Mitternachtsregel erscheinen erst im nächsten Schritt, wenn du den Schalter **„Eigene Werte statt der gesetzlichen Sätze verwenden“** aktivierst. Konten, Zahlweise und „Kilometer abrechnen“ bleiben direkt im ersten Schritt.
+### Hinweise
+- Bestehende Einstellungen bleiben erhalten: Wer eigene Werte eingetragen hat, sieht den Schalter aktiv; wer nur die Standardwerte hatte, nutzt jetzt automatisch die Jahrestabelle. Eigene Werte gelten weiter für alle Jahre. Nach dem Update Home Assistant neu starten.
+
 ## [0.11.0]
 ### Neu
 - **Sätze pro Jahr.** Die Inlandspauschalen und alle übrigen Regeln sind jetzt je Jahr hinterlegt. Eine Reise wird mit den Sätzen ihres Reisejahres berechnet, auch wenn sie erst im Folgejahr abgerechnet wird. Ändert der Gesetzgeber die Sätze, kommt mit einem Update ein Eintrag für das neue Jahr dazu; frühere Abrechnungen bleiben unverändert. Ein Jahr ohne eigenen Eintrag nutzt die Sätze des Vorjahres.

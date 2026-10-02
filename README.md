@@ -44,7 +44,7 @@ Bei manueller Installation müssen Updates selbst eingespielt werden (Ordner ers
 Beim ersten Start installiert Home Assistant die Bibliothek `reportlab`. Das braucht Internet und klappt auf den gängigen Systemen (Home Assistant OS, Container) problemlos. Falls die Integration nicht startet, steht der Grund unter Einstellungen → System → Protokolle.
 
 ### Nach der Installation
-Pauschalen, Kürzungen, km-Sätze und Konten unter *Konfigurieren* anpassen (Standard: Deutschland, Sätze des Reisejahres; in den Einstellungen nur ändern, wenn du bewusst abweichen willst – eigene Werte gelten für alle Jahre).
+Pauschalen, Kürzungen, km-Sätze und Konten unter *Konfigurieren* anpassen (Standard: Deutschland, gesetzliche Sätze des Reisejahres aus der hinterlegten Tabelle). Nur wenn du unter *Rechtliche Vorgaben* den Schalter **„Eigene Werte“** aktivierst, erscheinen die Eingabefelder für Pauschalen, Kürzungen und km-Sätze; eigene Werte gelten dann für alle Jahre.
 
 PDFs liegen standardmäßig unter `<config>/reisekosten/`. Dieser Ordner ist **nicht öffentlich**: Die PDFs werden nur über Home Assistant ausgeliefert, und zwar mit Anmeldung oder über einen befristeten, signierten Link (Handy-Benachrichtigung 7 Tage, Sensor-Attribut `link` 24 Stunden, wird stündlich erneuert).
 In den Optionen kann ein anderer **Speicherort** gewählt werden (z. B. `/media/reisekosten` oder `/share/Reisekosten`). Der Speicherort ist in den Optionen ein Dropdown (Standard, `/media`, `/share`, deren Unterordner, erlaubte Ordner) – eigene Pfade lassen sich eintippen.

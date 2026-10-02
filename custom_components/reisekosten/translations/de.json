@@ -52,13 +52,25 @@
       },
       "rules": {
         "title": "Rechtliche Vorgaben",
+        "description": "Es gelten automatisch die gesetzlichen Sätze des jeweiligen Reisejahres (Inland). Nur wenn du bewusst abweichen willst, aktiviere „Eigene Werte“, dann kannst du die Sätze im nächsten Schritt ändern. Eigene Werte gelten für alle Jahre.",
+        "data": {
+          "custom_rules": "Eigene Werte statt der gesetzlichen Sätze verwenden",
+          "km_enabled": "Kilometer abrechnen (aus, wenn das Fahrzeug über den Betrieb läuft)",
+          "account_per_diem": "Konto Verpflegungspauschale",
+          "account_km": "Konto Fahrtkosten",
+          "account_contra": "Gegenkonto",
+          "payment": "Zahlweise"
+        }
+      },
+      "rules_custom": {
+        "title": "Eigene Werte",
+        "description": "Diese Werte ersetzen die gesetzlichen Sätze für alle Reisejahre. Zurück zu den gesetzlichen Sätzen: im vorherigen Schritt „Eigene Werte“ ausschalten.",
         "data": {
           "country": "Land (Anzeige)",
           "p8": "Pauschale mehr als 8 Stunden (EUR)",
           "p24": "Pauschale voller Tag, 24 Stunden (EUR)",
           "arrival_departure": "Pauschale An-/Abreisetag (EUR)",
           "min_hours": "Mindestabwesenheit (Stunden)",
-          "km_enabled": "Kilometer abrechnen (aus, wenn das Fahrzeug über den Betrieb läuft)",
           "strictly_more_than": "Nur bei MEHR als der Mindestabwesenheit (aus = ab Mindestabwesenheit)",
           "cut_breakfast": "Kürzung Frühstück (Anteil der 24-h-Pauschale)",
           "cut_lunch": "Kürzung Mittagessen (Anteil)",
@@ -67,11 +79,7 @@
           "km_motorcycle": "Kilometersatz Motorrad (EUR/km)",
           "km_scooter": "Kilometersatz Motorroller (EUR/km)",
           "lodging_flat": "Übernachtungspauschale (EUR)",
-          "midnight_rule": "Reise über Mitternacht ohne Übernachtung: Zuordnung",
-          "account_per_diem": "Konto Verpflegungspauschale",
-          "account_km": "Konto Fahrtkosten",
-          "account_contra": "Gegenkonto",
-          "payment": "Zahlweise"
+          "midnight_rule": "Reise über Mitternacht ohne Übernachtung: Zuordnung"
         }
       }
     }

@@ -18,6 +18,7 @@ from .const import (
 )
 from .core.rules import MIDNIGHT_RULES, Rules, diff_overrides, rules_for
 
+CUSTOM_RULES = "custom_rules"
 MONEY_FIELDS = ("p8", "p24", "arrival_departure", "cut_breakfast", "cut_lunch", "cut_dinner",
                 "km_car", "km_motorcycle", "km_scooter", "lodging_flat", "min_hours")
 
@@ -143,29 +144,63 @@ class ReisekostenOptionsFlow(OptionsFlow):
         return self.async_show_form(step_id="general", data_schema=vol.Schema(fields))
 
     async def async_step_rules(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Konten, Kilometer an/aus und der Schalter „eigene Werte“; die Sätze kommen aus der Jahrestabelle."""
         current = self.config_entry.options
-        rules = rules_for(2026, current.get(OPT_RULES) or None).to_dict()
         acc = current.get(OPT_ACCOUNTS) or {}
+        overrides = diff_overrides(current.get(OPT_RULES) or None)
+        own_values = any(k != "km_enabled" for k in overrides)
+        km_on = bool(rules_for(2026, current.get(OPT_RULES) or None).km_enabled)
+
+        if user_input is not None:
+            self._rules_draft = {
+                "accounts": {
+                    ACC_PER_DIEM: user_input[ACC_PER_DIEM], ACC_KM: user_input[ACC_KM],
+                    ACC_CONTRA: user_input[ACC_CONTRA], ACC_PAYMENT: user_input[ACC_PAYMENT],
+                },
+                "km_enabled": bool(user_input["km_enabled"]),
+            }
+            if user_input.get(CUSTOM_RULES):
+                return await self.async_step_rules_custom()
+            out = dict(current)
+            out[OPT_ACCOUNTS] = self._rules_draft["accounts"]
+            out[OPT_RULES] = diff_overrides({"km_enabled": self._rules_draft["km_enabled"]})
+            return self.async_create_entry(data=out)
+
+        fields: dict[Any, Any] = {
+            vol.Required(CUSTOM_RULES, default=own_values): selector.BooleanSelector(),
+            vol.Required("km_enabled", default=km_on): selector.BooleanSelector(),
+            vol.Optional(ACC_PER_DIEM, default=acc.get(ACC_PER_DIEM, "4664")): selector.TextSelector(),
+            vol.Optional(ACC_KM, default=acc.get(ACC_KM, "")): selector.TextSelector(),
+            vol.Optional(ACC_CONTRA, default=acc.get(ACC_CONTRA, "")): selector.TextSelector(),
+            vol.Optional(ACC_PAYMENT, default=acc.get(ACC_PAYMENT, "Bar")): selector.TextSelector(),
+        }
+        return self.async_show_form(step_id="rules", data_schema=vol.Schema(fields))
+
+    async def async_step_rules_custom(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Eigene Werte statt der Jahrestabelle (gelten für alle Jahre)."""
+        current = self.config_entry.options
+        draft = getattr(self, "_rules_draft", {"accounts": current.get(OPT_ACCOUNTS) or {},
+                                                "km_enabled": True})
+        rules = rules_for(2026, current.get(OPT_RULES) or None).to_dict()
+        rules.pop("km_enabled", None)
 
         if user_input is not None:
             new_rules = {}
             for key in rules:
                 value = user_input[key]
                 new_rules[key] = str(Decimal(str(value))) if key in MONEY_FIELDS else value
+            new_rules["km_enabled"] = draft["km_enabled"]
             Rules.from_dict(new_rules)                      # validiert
             out = dict(current)
             out[OPT_RULES] = diff_overrides(new_rules)      # nur eigene Abweichungen speichern
-            out[OPT_ACCOUNTS] = {
-                ACC_PER_DIEM: user_input[ACC_PER_DIEM], ACC_KM: user_input[ACC_KM],
-                ACC_CONTRA: user_input[ACC_CONTRA], ACC_PAYMENT: user_input[ACC_PAYMENT],
-            }
+            out[OPT_ACCOUNTS] = draft["accounts"]
             return self.async_create_entry(data=out)
 
         fields: dict[Any, Any] = {}
         for key, value in rules.items():
             if key in MONEY_FIELDS:
                 fields[vol.Required(key, default=float(value))] = _number(0.01)
-            elif key in ("strictly_more_than", "km_enabled"):
+            elif key == "strictly_more_than":
                 fields[vol.Required(key, default=bool(value))] = selector.BooleanSelector()
             elif key == "midnight_rule":
                 fields[vol.Required(key, default=value)] = selector.SelectSelector(
@@ -173,8 +208,4 @@ class ReisekostenOptionsFlow(OptionsFlow):
                         options=list(MIDNIGHT_RULES), translation_key="midnight_rule"))
             else:
                 fields[vol.Required(key, default=value)] = selector.TextSelector()
-        fields[vol.Optional(ACC_PER_DIEM, default=acc.get(ACC_PER_DIEM, "4664"))] = selector.TextSelector()
-        fields[vol.Optional(ACC_KM, default=acc.get(ACC_KM, ""))] = selector.TextSelector()
-        fields[vol.Optional(ACC_CONTRA, default=acc.get(ACC_CONTRA, ""))] = selector.TextSelector()
-        fields[vol.Optional(ACC_PAYMENT, default=acc.get(ACC_PAYMENT, "Bar"))] = selector.TextSelector()
-        return self.async_show_form(step_id="rules", data_schema=vol.Schema(fields))
+        return self.async_show_form(step_id="rules_custom", data_schema=vol.Schema(fields))
