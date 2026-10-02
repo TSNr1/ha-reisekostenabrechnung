@@ -7,9 +7,26 @@ Verlässt sie die Heimzone, ist länger als die Mindestzeit (Standard: mehr als 
 fragt sie auf dem Handy nach Reiseziel, Zweck, Kilometern (und ggf. Übernachtung/Mahlzeiten) und erzeugt die PDF.
 
 ## Installation
-1. Ordner `custom_components/reisekosten` nach `<config>/custom_components/` kopieren und Home Assistant neu starten.
-2. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Reisekosten**.
-3. Pauschalen, Kürzungen, km-Sätze und Konten unter *Konfigurieren* anpassen (Standard: Deutschland 2026).
+
+### Option A: über HACS (empfohlen)
+Mit HACS bekommst du Updates direkt in Home Assistant angezeigt.
+1. In Home Assistant **HACS** öffnen, oben rechts das Menü (⋮) → **Benutzerdefinierte Repositories**.
+2. Als Repository `https://github.com/TSNr1/ha-reisekostenabrechnung` eintragen, als Kategorie **Integration** wählen und **Hinzufügen**.
+3. In HACS nach **Reisekosten** suchen, öffnen und **Herunterladen** (die neueste Version wählen).
+4. Home Assistant **neu starten**.
+5. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Reisekosten**.
+
+Updates erscheinen später wie bei anderen HACS-Integrationen unter *Updates*; nach jedem Update Home Assistant neu starten.
+
+### Option B: manuell
+1. Den Ordner `custom_components/reisekosten` aus diesem Repository nach `<config>/custom_components/` kopieren (bei einer Version aus den Releases: die ZIP-Datei entpacken).
+2. Home Assistant **neu starten**.
+3. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Reisekosten**.
+
+Bei manueller Installation müssen Updates selbst eingespielt werden (Ordner ersetzen, neu starten).
+
+### Nach der Installation
+Pauschalen, Kürzungen, km-Sätze und Konten unter *Konfigurieren* anpassen (Standard: Deutschland 2026).
 
 PDFs liegen standardmäßig unter `<config>/www/reisekosten/` (abrufbar über `/local/reisekosten/<datei>`).
 In den Optionen kann ein anderer **Speicherort** gewählt werden (z. B. `/media/reisekosten` oder `/share/Reisekosten`). Der Speicherort ist in den Optionen ein Dropdown (Standard, `/media`, `/share`, deren Unterordner, erlaubte Ordner) – eigene Pfade lassen sich eintippen.
