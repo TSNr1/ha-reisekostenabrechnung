@@ -1,0 +1,38 @@
+name: Fehler melden
+description: Etwas funktioniert nicht wie erwartet
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Bitte **keine persönlichen Daten** (Name, Adresse, Reisedaten) in öffentliche Meldungen schreiben. Logs vorher prüfen und schwärzen.
+  - type: input
+    id: version
+    attributes:
+      label: Version der Integration
+      placeholder: z. B. v0.10.0
+    validations:
+      required: true
+  - type: input
+    id: ha
+    attributes:
+      label: Home-Assistant-Version und Installationsart
+      placeholder: z. B. 2026.9.2, Home Assistant OS
+    validations:
+      required: true
+  - type: dropdown
+    id: phone
+    attributes:
+      label: Handy für die Rückfragen
+      options: [Android, iPhone, Anderes / keins]
+  - type: textarea
+    id: what
+    attributes:
+      label: Was ist passiert, was hast du erwartet?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Log-Auszug (Einstellungen → System → Protokolle, Suche „reisekosten“)
+      render: text

@@ -1,0 +1,14 @@
+name: Wunsch oder Idee
+description: Eine Funktion vorschlagen
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Was soll die Integration können?
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Wofür brauchst du das (Selbstständig, Angestellt, Land)?

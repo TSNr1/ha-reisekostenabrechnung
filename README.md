@@ -2,9 +2,24 @@
 
 # Reisekosten für Home Assistant
 
+> **Beta:** Die Integration ist neu und bisher nur von wenigen Personen im Alltag getestet. Kalender, Arbeitsstätte, Kilometerzähler und die Tätigkeitsfrage sind noch nicht in vielen echten Reisen erprobt. Bitte Abrechnungen prüfen und Fehler gern melden. [English summary below](#english-summary)
+
 Erstellt automatisch eine Reisekostenabrechnung (PDF) für jede Reise: Die Integration beobachtet eine `person`-Entität.
 Verlässt sie die Heimzone, ist länger als die Mindestzeit (Standard: mehr als 8 Stunden) unterwegs und kommt zurück,
 fragt sie auf dem Handy nach Reiseziel, Zweck, Kilometern (und ggf. Übernachtung/Mahlzeiten) und erzeugt die PDF.
+
+<p align="center"><img src="docs/beispiel-abrechnung.png" width="420" alt="Beispiel einer erzeugten Abrechnung (Beispieldaten)"></p>
+
+## Was die Integration kann – und was nicht
+**Kann:** Reisen automatisch erkennen, per Handy nachfragen (Ziel, Zweck, Kilometer, Übernachtung, Mahlzeiten), Termine aus Kalendern vorschlagen, Verpflegungspauschalen nach deutschem Reisekostenrecht berechnen, PDF mit Buchungsliste erzeugen, optional nach OneDrive kopieren, Abrechnungen am Dashboard korrigieren.
+
+**Grenzen (Stand jetzt):**
+- Nur **Deutschland** und die Sätze von **2026** (Inlandspauschalen 14 € / 28 € / 14 €), keine Auslandspauschalen.
+- Keine **Dreimonatsfrist** bei längerer Tätigkeit am selben Ort, keine steuerliche Prüfung der „ersten Tätigkeitsstätte“.
+- **Übernachtungs- und Hotelkosten mit Beleg** werden nicht berechnet, nur Verpflegung und Kilometer.
+- Eine Person und eine Heimzone (optional eine Arbeitszone) je Einrichtung.
+- Rückfragen funktionieren über die Home-Assistant-Companion-App. Getestet ist **Android**; ob die Texteingabe auf dem iPhone gleich funktioniert, ist nicht geprüft.
+- Das Ergebnis ist eine Hilfe, **keine Steuerberatung** (siehe Haftungsausschluss).
 
 ## Installation
 
@@ -24,6 +39,9 @@ Updates erscheinen später wie bei anderen HACS-Integrationen unter *Updates*; n
 3. Einstellungen → Geräte & Dienste → Integration hinzufügen → **Reisekosten**.
 
 Bei manueller Installation müssen Updates selbst eingespielt werden (Ordner ersetzen, neu starten).
+
+### Hinweis zur PDF-Bibliothek
+Beim ersten Start installiert Home Assistant die Bibliothek `reportlab`. Das braucht Internet und klappt auf den gängigen Systemen (Home Assistant OS, Container) problemlos. Falls die Integration nicht startet, steht der Grund unter Einstellungen → System → Protokolle.
 
 ### Nach der Installation
 Pauschalen, Kürzungen, km-Sätze und Konten unter *Konfigurieren* anpassen (Standard: Deutschland 2026).
@@ -145,3 +163,6 @@ Diese Software wird unentgeltlich und **„wie besehen“ ohne jede Gewähr** be
 
 ## Entwicklung
 `python3 -m unittest discover -s tests` · `python3 demo.py` erzeugt eine Beispiel-PDF.
+
+## English summary
+Home Assistant custom integration for **German** business-trip expense statements (Reisekostenabrechnung). It watches a `person`, detects trips that exceed the minimum duration, asks for destination, purpose, mileage, overnight stays and provided meals on the phone, suggests data from your calendars, calculates meal allowances for Germany (2026 rates) and creates a PDF statement with a booking list (SKR03/SKR04), optionally copied to OneDrive. Supports self-employed, employees or both, an optional workplace zone, and corrections from a dashboard. Install via HACS (custom repository, category *Integration*) or manually. **Beta; the user interface and documentation are German/English, the statement itself is German. This is not tax advice.**
