@@ -145,12 +145,30 @@ entities:
 - `reisekosten.delete_trip` – Abrechnung samt PDF (und OneDrive-Kopie) löschen
 - `reisekosten.list_trips` – erstellte Abrechnungen auflisten
 
+## Geplant (Coming soon)
+Ideen und Vorhaben, geordnet nach Nähe zur Umsetzung. Das ist eine Wunschliste ohne Terminzusage; Reihenfolge und Umfang können sich ändern. Wünsche gern als [Issue](../../issues) melden.
+
+**Als Nächstes**
+- **Auslandsreisen:** Land pro Reise (Frage auf dem Handy, Vorschlag aus Kalender oder Standort), Auslandspauschalen je Land und Jahr, Übernachtungspauschalen, besondere An-/Abreise- und Durchreiseregeln.
+- **Dreimonatsfrist:** Hinweis und Berechnung, wenn du länger als drei Monate an derselben Tätigkeitsstätte bist.
+- **Übernachtungs- und Hotelkosten mit Beleg** statt nur Verpflegung und Kilometer.
+
+**Danach**
+- **Eigene Dashboard-Karte** statt der Entitäten-Karten, mit Bearbeiten und PDF-Vorschau.
+- **Monats- und Jahresübersicht** als Export (CSV oder PDF) für Steuerberater oder Buchhaltung.
+- **Zweite Zone** (z. B. Betriebsstätte oder Kunde) und mehrere Personen pro Einrichtung.
+- **Test und Anpassungen für iPhone** (Benachrichtigungen und Eingabe sind bisher nur mit Android getestet).
+
+**Bewusst offen / noch unklar**
+- **Liste der Fahrten Wohnung–Arbeitsstätte** für die Entfernungspauschale (Pendlerliste).
+- Weitere Sprachen und Länder für die Berechnungsregeln.
+
 ## Änderungen
 Siehe [CHANGELOG.md](CHANGELOG.md).
 
 ## Hinweise
 - Keine Steuerberatung. Pauschalen und Konten bitte mit dem Steuerberater abstimmen.
-- Nicht umgesetzt: Dreimonatsfrist, Ausland, Belege/tatsächliche Übernachtungskosten, zweite Zone (Betriebsstätte).
+- Nicht umgesetzt: Dreimonatsfrist, Ausland, Belege/tatsächliche Übernachtungskosten, zweite Zone (Betriebsstätte). Siehe [Geplant](#geplant-coming-soon).
 
 ## Haftungsausschluss
 Diese Software wird unentgeltlich und **„wie besehen“ ohne jede Gewähr** bereitgestellt.
@@ -165,4 +183,4 @@ Diese Software wird unentgeltlich und **„wie besehen“ ohne jede Gewähr** be
 `python3 -m unittest discover -s tests` · `python3 demo.py` erzeugt eine Beispiel-PDF.
 
 ## English summary
-Home Assistant custom integration for **German** business-trip expense statements (Reisekostenabrechnung). It watches a `person`, detects trips that exceed the minimum duration, asks for destination, purpose, mileage, overnight stays and provided meals on the phone, suggests data from your calendars, calculates meal allowances for Germany (2026 rates) and creates a PDF statement with a booking list (SKR03/SKR04), optionally copied to OneDrive. Supports self-employed, employees or both, an optional workplace zone, and corrections from a dashboard. Install via HACS (custom repository, category *Integration*) or manually. **Beta. The user interface is available in German and English; the README and the generated statement are in German. This is not tax advice.**
+Home Assistant custom integration for **German** business-trip expense statements (Reisekostenabrechnung). It watches a `person`, detects trips that exceed the minimum duration, asks for destination, purpose, mileage, overnight stays and provided meals on the phone, suggests data from your calendars, calculates meal allowances for Germany (2026 rates) and creates a PDF statement with a booking list (SKR03/SKR04), optionally copied to OneDrive. Supports self-employed, employees or both, an optional workplace zone, and corrections from a dashboard. Install via HACS (custom repository, category *Integration*) or manually. **Planned:** foreign-country rates, three-month rule, hotel costs with receipts, own dashboard card, exports. **Beta. The user interface is available in German and English; the README and the generated statement are in German. This is not tax advice.**
