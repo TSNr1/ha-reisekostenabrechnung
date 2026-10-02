@@ -2,6 +2,12 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.8.1]
+### Behoben
+- Die neuen Dashboard-Entitäten aus 0.8.0 hatten keine Namen (alle hießen wie das Gerät, z. B. „Reisekosten Martin“, mit Entity-IDs wie `text.…_2`). Die Übersetzungen waren falsch aufgebaut und sind korrigiert.
+### Hinweise
+- Bereits angelegte Entitäten behalten ihre alte Entity-ID und müssen einmalig umbenannt werden (Einstellungen → Entitäten); die Anzeigenamen werden nach Neustart von selbst richtig.
+
 ## [0.8.0]
 ### Neu
 - **Korrekturkarte fürs Dashboard:** Neue Eingabe-Entitäten, mit denen Abrechnungen direkt am Dashboard korrigiert werden können: Auswahl der Abrechnung, Felder für Reise, Zweck, Mahlzeiten, Kilometer und Übernachtung, dazu Knöpfe „Abrechnung neu erzeugen“ und „Abrechnung löschen“.

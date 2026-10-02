@@ -209,25 +209,47 @@
       }
     },
     "select": {
-      "trip": "Statement"
+      "trip": {
+        "name": "Statement"
+      }
     },
     "text": {
-      "field_name": "Trip",
-      "field_purpose": "Purpose",
-      "field_meals": "Meals provided",
-      "answer": "Answer to open question"
+      "field_name": {
+        "name": "Trip"
+      },
+      "field_purpose": {
+        "name": "Purpose"
+      },
+      "field_meals": {
+        "name": "Meals provided"
+      },
+      "answer": {
+        "name": "Answer to open question"
+      }
     },
     "number": {
-      "field_km": "Kilometres"
+      "field_km": {
+        "name": "Kilometres"
+      }
     },
     "switch": {
-      "field_overnight": "Overnight stay"
+      "field_overnight": {
+        "name": "Overnight stay"
+      }
     },
     "button": {
-      "btn_apply": "Regenerate statement",
-      "btn_delete": "Delete statement",
-      "btn_discard_open": "Discard open trip",
-      "btn_resend": "Resend open question"
+      "btn_apply": {
+        "name": "Regenerate statement"
+      },
+      "btn_delete": {
+        "name": "Delete statement"
+      },
+      "btn_discard_open": {
+        "name": "Discard open trip"
+      },
+      "btn_resend": {
+        "name": "Resend open question"
+      }
     }
   }
 }

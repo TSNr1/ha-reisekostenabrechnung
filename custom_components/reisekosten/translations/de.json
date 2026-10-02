@@ -209,25 +209,47 @@
       }
     },
     "select": {
-      "trip": "Abrechnung"
+      "trip": {
+        "name": "Abrechnung"
+      }
     },
     "text": {
-      "field_name": "Reise",
-      "field_purpose": "Zweck",
-      "field_meals": "Gestellte Mahlzeiten",
-      "answer": "Antwort auf offene Frage"
+      "field_name": {
+        "name": "Reise"
+      },
+      "field_purpose": {
+        "name": "Zweck"
+      },
+      "field_meals": {
+        "name": "Gestellte Mahlzeiten"
+      },
+      "answer": {
+        "name": "Antwort auf offene Frage"
+      }
     },
     "number": {
-      "field_km": "Kilometer"
+      "field_km": {
+        "name": "Kilometer"
+      }
     },
     "switch": {
-      "field_overnight": "Übernachtung"
+      "field_overnight": {
+        "name": "Übernachtung"
+      }
     },
     "button": {
-      "btn_apply": "Abrechnung neu erzeugen",
-      "btn_delete": "Abrechnung löschen",
-      "btn_discard_open": "Offene Reise verwerfen",
-      "btn_resend": "Offene Frage erneut senden"
+      "btn_apply": {
+        "name": "Abrechnung neu erzeugen"
+      },
+      "btn_delete": {
+        "name": "Abrechnung löschen"
+      },
+      "btn_discard_open": {
+        "name": "Offene Reise verwerfen"
+      },
+      "btn_resend": {
+        "name": "Offene Frage erneut senden"
+      }
     }
   }
 }
