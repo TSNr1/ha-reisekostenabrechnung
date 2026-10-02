@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up Reisekosten",
-        "description": "The person is tracked. When they leave the zone for longer than the minimum time and return, a statement is started.",
+        "description": "The person is tracked. When they leave the zone for longer than the minimum time and return, a statement is started. Note: Calculations are provided as is, without warranty, and are not tax advice; please check every statement yourself. Use at your own risk; liability excluded as far as legally permitted.",
         "data": {
           "person": "Person",
           "zone": "Home / workplace zone",

@@ -37,5 +37,14 @@ Siehe [CHANGELOG.md](CHANGELOG.md).
 - Keine Steuerberatung. Pauschalen und Konten bitte mit dem Steuerberater abstimmen.
 - Nicht umgesetzt: Dreimonatsfrist, Ausland, Belege/tatsächliche Übernachtungskosten, zweite Zone (Betriebsstätte).
 
+## Haftungsausschluss
+Diese Software wird unentgeltlich und **„wie besehen“ ohne jede Gewähr** bereitgestellt.
+
+- **Keine Steuer- oder Rechtsberatung:** Die Berechnung von Pauschalen, Kürzungen, Mitternachtsregel, Kilometersätzen und Konten ist eine Hilfestellung. Für Richtigkeit, Vollständigkeit und Aktualität der Beträge und Vorgaben wird keine Gewähr übernommen. Steuerliche Regeln ändern sich und hängen vom Einzelfall ab.
+- **Eigene Prüfung:** Jede erzeugte Abrechnung ist vor der Verwendung (Buchhaltung, Steuererklärung, Erstattung) selbst zu prüfen und bei Bedarf mit Steuerberater oder Finanzamt abzustimmen.
+- **Haftung:** Die Nutzung erfolgt auf eigenes Risiko. Der Autor haftet – soweit gesetzlich zulässig – nicht für Schäden, die aus der Nutzung oder Nichtverfügbarkeit der Software entstehen, etwa fehlerhafte Abrechnungen, nicht erstellte oder verlorene PDFs, Steuernachzahlungen oder Datenverlust. Unberührt bleibt die Haftung für Vorsatz und grobe Fahrlässigkeit, für die Verletzung von Leben, Körper und Gesundheit sowie eine nach zwingendem Recht bestehende Haftung.
+- **Datenschutz:** Die Integration verarbeitet Standort-Status der gewählten Person, Kalendertermine und Reisedaten ausschließlich in deiner Home-Assistant-Installation. Nur wenn du den OneDrive-Upload aktivierst, wird die fertige PDF an OneDrive übertragen.
+- Kein Zusammenhang mit Onexma oder anderen Anbietern von Reisekostenabrechnungen; Namen sind Marken ihrer jeweiligen Inhaber.
+
 ## Entwicklung
 `python3 -m unittest discover -s tests` · `python3 demo.py` erzeugt eine Beispiel-PDF.

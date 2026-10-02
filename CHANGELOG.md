@@ -2,6 +2,10 @@
 
 Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [0.6.1]
+### Neu
+- **Haftungsausschluss** im README (keine Gewähr, keine Steuerberatung, eigene Prüfung, Datenschutzhinweis) und als Hinweis im Einrichtungsdialog.
+
 ## [0.6.0]
 ### Neu
 - **„Keine Dienstreise“:** Bei der ersten Handy-Frage gibt es einen Knopf, mit dem sich private Ausflüge verwerfen lassen (auch als Dienst `reisekosten.discard`).
@@ -42,6 +46,7 @@ Alle wichtigen Änderungen an dieser Integration. Format angelehnt an [Keep a Ch
 - Einrichtung über die Oberfläche, automatische Erkennung über eine `person`-Entität, Rückfragen auf dem Handy, PDF-Abrechnung (Aufstellung und Buchungsliste), fortlaufende Nummern, Dienste `add_trip` und `answer`.
 - Rechtliche Vorgaben einstellbar: Pauschalen, Mindestzeit, Kürzungen, Kilometersätze, Mitternachtsregel, Konten.
 
+[0.6.1]: https://github.com/TSNr1/ha-reisekostenabrechnung/releases/tag/v0.6.1
 [0.6.0]: https://github.com/TSNr1/ha-reisekostenabrechnung/releases/tag/v0.6.0
 [0.5.1]: https://github.com/TSNr1/ha-reisekostenabrechnung/releases/tag/v0.5.1
 [0.5.0]: https://github.com/TSNr1/ha-reisekostenabrechnung/releases/tag/v0.5.0

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Reisekosten einrichten",
-        "description": "Die Person wird überwacht. Verlässt sie die Zone, länger als die Mindestzeit, und kommt zurück, startet die Abrechnung.",
+        "description": "Die Person wird überwacht. Verlässt sie die Zone, länger als die Mindestzeit, und kommt zurück, startet die Abrechnung. Hinweis: Die Berechnung ist eine Hilfestellung ohne Gewähr und keine Steuerberatung; Abrechnungen bitte selbst prüfen. Nutzung auf eigene Verantwortung, Haftung soweit gesetzlich zulässig ausgeschlossen.",
         "data": {
           "person": "Person",
           "zone": "Wohnung / erste Tätigkeitsstätte (Zone)",
