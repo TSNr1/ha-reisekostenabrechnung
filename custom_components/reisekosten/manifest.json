@@ -1,0 +1,24 @@
+{
+  "domain": "reisekosten",
+  "name": "Reisekosten",
+  "codeowners": [
+    "@TSNr1"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "person",
+    "zone"
+  ],
+  "after_dependencies": [
+    "mobile_app"
+  ],
+  "documentation": "https://github.com/TSNr1/ha-reisekostenabrechnung",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/TSNr1/ha-reisekostenabrechnung/issues",
+  "requirements": [
+    "reportlab>=4.0"
+  ],
+  "single_config_entry": true,
+  "version": "0.3.0"
+}

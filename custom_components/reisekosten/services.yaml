@@ -1,0 +1,44 @@
+add_trip:
+  fields:
+    start:
+      required: true
+      selector:
+        datetime:
+    end:
+      required: true
+      selector:
+        datetime:
+    name:
+      selector:
+        text:
+    purpose:
+      selector:
+        text:
+    overnight:
+      selector:
+        boolean:
+    km_car:
+      selector:
+        number:
+          min: 0
+          max: 5000
+          step: 0.1
+          unit_of_measurement: km
+    meals:
+      selector:
+        text:
+answer:
+  fields:
+    trip_id:
+      required: true
+      selector:
+        text:
+    step:
+      required: true
+      selector:
+        select:
+          options: [name, purpose, km, overnight, meals]
+    text:
+      required: true
+      selector:
+        text:

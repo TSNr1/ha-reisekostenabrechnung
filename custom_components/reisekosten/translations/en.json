@@ -1,0 +1,111 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Reisekosten",
+        "description": "The person is tracked. When they leave the zone for longer than the minimum time and return, a statement is started.",
+        "data": {
+          "person": "Person",
+          "zone": "Home / workplace zone",
+          "notify_service": "Phone notification (notify.mobile_app_…)",
+          "person_name": "Name on statement",
+          "company": "Company",
+          "street": "Street",
+          "city": "Postcode, city"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Legal rules",
+        "data": {
+          "country": "Country (display)",
+          "p8": "Allowance over 8 hours (EUR)",
+          "p24": "Allowance full day, 24 hours (EUR)",
+          "arrival_departure": "Allowance arrival/departure day (EUR)",
+          "min_hours": "Minimum absence (hours)",
+          "km_enabled": "Bill mileage (off if the vehicle is a business vehicle)",
+          "strictly_more_than": "Only for MORE than the minimum (off = from the minimum)",
+          "cut_breakfast": "Deduction breakfast (share of 24 h rate)",
+          "cut_lunch": "Deduction lunch (share)",
+          "cut_dinner": "Deduction dinner (share)",
+          "km_car": "Mileage rate car (EUR/km)",
+          "km_motorcycle": "Mileage rate motorcycle (EUR/km)",
+          "km_scooter": "Mileage rate scooter (EUR/km)",
+          "lodging_flat": "Lodging flat rate (EUR)",
+          "midnight_rule": "Trip past midnight without overnight stay: assign to",
+          "output_dir": "Folder for the PDFs (empty = /config/www/reisekosten)",
+          "account_per_diem": "Account per diem",
+          "account_km": "Account mileage",
+          "account_contra": "Counter account",
+          "payment": "Payment method"
+        }
+      }
+    }
+  },
+  "selector": {
+    "midnight_rule": {
+      "options": {
+        "larger_share": "Day with larger share",
+        "end_day": "Return day",
+        "start_day": "Departure day"
+      }
+    }
+  },
+  "services": {
+    "add_trip": {
+      "name": "Add trip manually",
+      "description": "Creates a statement without questions.",
+      "fields": {
+        "start": {
+          "name": "Start",
+          "description": ""
+        },
+        "end": {
+          "name": "End",
+          "description": ""
+        },
+        "name": {
+          "name": "Trip",
+          "description": ""
+        },
+        "purpose": {
+          "name": "Purpose",
+          "description": ""
+        },
+        "overnight": {
+          "name": "Overnight",
+          "description": ""
+        },
+        "km_car": {
+          "name": "Kilometers car",
+          "description": ""
+        },
+        "meals": {
+          "name": "Provided meals",
+          "description": "08.01 FA, 09.01 M"
+        }
+      }
+    },
+    "answer": {
+      "name": "Answer question",
+      "description": "Answers an open question without the phone app.",
+      "fields": {
+        "trip_id": {
+          "name": "Trip ID",
+          "description": ""
+        },
+        "step": {
+          "name": "Step",
+          "description": ""
+        },
+        "text": {
+          "name": "Answer",
+          "description": ""
+        }
+      }
+    }
+  }
+}

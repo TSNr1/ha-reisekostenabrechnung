@@ -1,0 +1,111 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Reisekosten einrichten",
+        "description": "Die Person wird überwacht. Verlässt sie die Zone, länger als die Mindestzeit, und kommt zurück, startet die Abrechnung.",
+        "data": {
+          "person": "Person",
+          "zone": "Wohnung / erste Tätigkeitsstätte (Zone)",
+          "notify_service": "Handy-Benachrichtigung (notify.mobile_app_…)",
+          "person_name": "Name auf der Abrechnung",
+          "company": "Firma",
+          "street": "Straße",
+          "city": "PLZ Ort"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Rechtliche Vorgaben",
+        "data": {
+          "country": "Land (Anzeige)",
+          "p8": "Pauschale mehr als 8 Stunden (EUR)",
+          "p24": "Pauschale voller Tag, 24 Stunden (EUR)",
+          "arrival_departure": "Pauschale An-/Abreisetag (EUR)",
+          "min_hours": "Mindestabwesenheit (Stunden)",
+          "km_enabled": "Kilometer abrechnen (aus, wenn das Fahrzeug über den Betrieb läuft)",
+          "strictly_more_than": "Nur bei MEHR als der Mindestabwesenheit (aus = ab Mindestabwesenheit)",
+          "cut_breakfast": "Kürzung Frühstück (Anteil der 24-h-Pauschale)",
+          "cut_lunch": "Kürzung Mittagessen (Anteil)",
+          "cut_dinner": "Kürzung Abendessen (Anteil)",
+          "km_car": "Kilometersatz Pkw (EUR/km)",
+          "km_motorcycle": "Kilometersatz Motorrad (EUR/km)",
+          "km_scooter": "Kilometersatz Motorroller (EUR/km)",
+          "lodging_flat": "Übernachtungspauschale (EUR)",
+          "midnight_rule": "Reise über Mitternacht ohne Übernachtung: Zuordnung",
+          "output_dir": "Speicherort der PDFs (Ordner; leer = /config/www/reisekosten)",
+          "account_per_diem": "Konto Verpflegungspauschale",
+          "account_km": "Konto Fahrtkosten",
+          "account_contra": "Gegenkonto",
+          "payment": "Zahlweise"
+        }
+      }
+    }
+  },
+  "selector": {
+    "midnight_rule": {
+      "options": {
+        "larger_share": "Tag mit größerem Anteil",
+        "end_day": "Rückkehrtag",
+        "start_day": "Abreisetag"
+      }
+    }
+  },
+  "services": {
+    "add_trip": {
+      "name": "Reise manuell hinzufügen",
+      "description": "Erzeugt eine Abrechnung ohne Rückfragen.",
+      "fields": {
+        "start": {
+          "name": "Start",
+          "description": ""
+        },
+        "end": {
+          "name": "Ende",
+          "description": ""
+        },
+        "name": {
+          "name": "Reise",
+          "description": ""
+        },
+        "purpose": {
+          "name": "Zweck",
+          "description": ""
+        },
+        "overnight": {
+          "name": "Übernachtung",
+          "description": ""
+        },
+        "km_car": {
+          "name": "Kilometer Pkw",
+          "description": ""
+        },
+        "meals": {
+          "name": "Gestellte Mahlzeiten",
+          "description": "08.01 FA, 09.01 M"
+        }
+      }
+    },
+    "answer": {
+      "name": "Rückfrage beantworten",
+      "description": "Beantwortet eine offene Rückfrage ohne die Handy-App.",
+      "fields": {
+        "trip_id": {
+          "name": "Reise-ID",
+          "description": ""
+        },
+        "step": {
+          "name": "Schritt",
+          "description": ""
+        },
+        "text": {
+          "name": "Antwort",
+          "description": ""
+        }
+      }
+    }
+  }
+}
