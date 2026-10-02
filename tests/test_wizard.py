@@ -5,7 +5,7 @@ from decimal import Decimal as D
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "custom_components" / "reisekosten"))
+import corepath  # noqa: F401, E402
 
 from core.rules import Rules  # noqa: E402
 from core.wizard import (  # noqa: E402

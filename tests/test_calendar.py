@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "custom_components" / "reisekosten"))
+import corepath  # noqa: F401, E402
 
 from core.calendar_match import pick_event  # noqa: E402
 
