@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon.png" width="128" alt="Reisekosten"></p>
+
 # Reisekosten für Home Assistant
 
 Erstellt automatisch eine Reisekostenabrechnung (PDF) für jede Reise: Die Integration beobachtet eine `person`-Entität.
